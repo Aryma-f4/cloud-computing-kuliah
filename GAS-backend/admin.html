@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Presensi QR</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg:       #f5f7fa;
+    --white:    #ffffff;
+    --border:   #e4e8ef;
+    --border2:  #d0d7e3;
+    --text:     #1a202c;
+    --muted:    #6b7280;
+    --light:    #9ca3af;
+    --blue:     #2563eb;
+    --blue-lt:  #eff6ff;
+    --blue-mid: #bfdbfe;
+    --green:    #16a34a;
+    --green-lt: #f0fdf4;
+    --green-mid:#bbf7d0;
+    --red:      #dc2626;
+    --red-lt:   #fef2f2;
+    --yellow:   #d97706;
+    --yellow-lt:#fffbeb;
+    --radius:   10px;
+    --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md:0 4px 12px rgba(0,0,0,.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .header-logo span { color: var(--blue); }
+  .header-tag {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--blue-lt);
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .header-course {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .header-course strong { color: var(--text); }
+
+  /* ── LAYOUT ─────────────────────────────── */
+  main {
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+  }
+  .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── CARD ───────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-head h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .card-head .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border2);
+  }
+  .card-head .dot.green  { background: var(--green); box-shadow: 0 0 0 3px var(--green-mid); }
+  .card-head .dot.yellow { background: var(--yellow); }
+  .card-body { padding: 18px; }
+
+  /* ── FORM ───────────────────────────────── */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--white);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  /* ── BUTTON ─────────────────────────────── */
+  .btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 7px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-blue {
+    background: var(--blue);
+    color: white;
+  }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-blue:disabled { opacity: .55; cursor: not-allowed; }
+
+  .btn-outline {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border2);
+    margin-top: 8px;
+  }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+  /* ── TOKEN RESULT ───────────────────────── */
+  .token-box {
+    margin-top: 14px;
+    background: var(--blue-lt);
+    border: 1px solid var(--blue-mid);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: none;
+  }
+  .token-box.show { display: block; }
+  .token-main {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .token-exp {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── COUNTDOWN ──────────────────────────── */
+  .countdown-wrap { margin-top: 12px; }
+  .countdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .countdown-row #cd-time { font-weight: 700; color: var(--text); }
+  .bar-track {
+    background: var(--border);
+    border-radius: 99px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 99px;
+    transition: width 1s linear, background .3s;
+    width: 100%;
+  }
+  .bar-fill.warn   { background: var(--yellow); }
+  .bar-fill.danger { background: var(--red); }
+
+  /* ── AUTO REFRESH ───────────────────────── */
+  .auto-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  .switch { position: relative; width: 34px; height: 18px; cursor: pointer; flex-shrink: 0; }
+  .switch input { display: none; }
+  .sw-track {
+    width: 100%; height: 100%;
+    background: var(--border2);
+    border-radius: 99px;
+    transition: background .2s;
+  }
+  .sw-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 12px; height: 12px;
+    background: white;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .sw-track { background: var(--green); }
+  .switch input:checked ~ .sw-thumb { transform: translateX(16px); }
+  .auto-row span { font-size: 13px; color: var(--muted); flex: 1; }
+  .badge-auto {
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--green-lt);
+    color: var(--green);
+    border: 1px solid var(--green-mid);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: none;
+  }
+  .badge-auto.show { display: inline; }
+
+  /* ── QR DISPLAY ─────────────────────────── */
+  .qr-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+    min-height: 320px;
+    position: relative;
+    gap: 18px;
+  }
+  .qr-empty {
+    text-align: center;
+    color: var(--light);
+  }
+  .qr-empty .icon { font-size: 40px; margin-bottom: 8px; }
+  .qr-empty p { font-size: 13px; }
+
+  #qr-wrap {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: popIn .35s ease;
+  }
+  #qr-wrap.show { display: flex; }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  #qrcode {
+    padding: 12px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+  }
+  .qr-label { text-align: center; }
+  .qr-token-text {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 3px;
+  }
+  .qr-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .btn-fs {
+    position: absolute;
+    top: 12px; right: 12px;
+    background: white;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-family: 'Figtree', sans-serif;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .btn-fs:hover { color: var(--blue); border-color: var(--blue); }
+
+  /* ── STATUS PANEL ───────────────────────── */
+  .right-col { display: flex; flex-direction: column; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .stat .num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat .num.blue  { color: var(--blue); }
+  .stat .num.green { color: var(--green); }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* table */
+  .tbl-wrap {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    flex: 1;
+  }
+  .tbl-head {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tbl-head h3 { font-size: 13px; font-weight: 600; }
+  .btn-refresh-tbl {
+    font-size: 12px;
+    font-family: 'Figtree', sans-serif;
+    background: white;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .btn-refresh-tbl:hover { color: var(--blue); border-color: var(--blue); }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 9px 16px;
+    background: var(--bg);
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfd; }
+  tbody td { padding: 10px 16px; font-size: 13px; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .pill.ok  { background: var(--green-lt); color: var(--green); border: 1px solid var(--green-mid); }
+
+  .empty-row td {
+    text-align: center;
+    padding: 40px;
+    color: var(--light);
+    font-size: 13px;
+  }
+
+  /* ── FULLSCREEN ─────────────────────────── */
+  #fs {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: white;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+  }
+  #fs.show { display: flex; }
+  #fs-qrcode { padding: 18px; background: white; border: 2px solid var(--border); border-radius: 14px; box-shadow: var(--shadow-md); }
+  .fs-token { font-size: 40px; font-weight: 700; letter-spacing: 6px; color: var(--text); }
+  .fs-sub   { font-size: 16px; color: var(--muted); }
+  .fs-cd    { font-size: 52px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .fs-cd.warn   { color: var(--yellow); }
+  .fs-cd.danger { color: var(--red); }
+  .btn-close-fs {
+    position: fixed;
+    top: 20px; right: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .btn-close-fs:hover { color: var(--text); }
+
+  /* ── TOAST ──────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    background: var(--text);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: none;
+    box-shadow: var(--shadow-md);
+    z-index: 9998;
+  }
+  #toast.show { display: flex; align-items: center; gap: 6px; animation: slideUp .25s ease; }
+  #toast.err  { background: var(--red); }
+  #toast.ok   { background: var(--green); }
+  @keyframes slideUp { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+  .spin {
+    display: inline-block;
+    width: 13px; height: 13px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- <header>
+  <div class="header-left">
+    <div class="header-logo">Presensi <span>QR</span></div>
+    <div class="header-tag">Panel Dosen</div>
+  </div>
+  <div class="header-course" id="header-course-info">Belum ada sesi aktif</div>
+</header> -->
+
+<main>
+  <!-- ══ KOLOM KIRI ══════════════════════════════════ -->
+  <div class="left-col">
+
+    <!-- Form Generate -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dot" id="dot-status"></div>
+        <h3>Buat QR Token Sesi</h3>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Course ID</label>
+          <input type="text" id="inp-course" placeholder="cloud-101" value="cloud-101">
+        </div>
+        <div class="field">
+          <label>Session ID</label>
+          <input type="text" id="inp-session" placeholder="sesi-01" value="sesi-01">
+        </div>
+        <button class="btn btn-blue" id="btn-gen" onclick="doGenerate()">
+          <span id="gen-label">Generate QR</span>
+        </button>
+
+        <!-- Token result -->
+        <div class="token-box" id="token-box">
+          <div class="token-main" id="tb-token">—</div>
+          <div class="token-exp" id="tb-exp">—</div>
+          <div class="countdown-wrap">
+            <div class="countdown-row">
+              <span>Sisa waktu</span>
+              <span id="cd-time">2:00</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto refresh -->
+        <div class="auto-row">
+          <label class="switch">
+            <input type="checkbox" id="auto-chk" onchange="onAutoChange(this.checked)">
+            <div class="sw-track"></div>
+            <div class="sw-thumb"></div>
+          </label>
+          <span>Auto refresh sebelum expired</span>
+          <span class="badge-auto" id="badge-auto">ON</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Display -->
+    <div class="card" style="position:relative">
+      <div class="card-head">
+        <div class="dot" id="dot-qr"></div>
+        <h3>QR Code Aktif</h3>
+        <span style="font-size:12px;color:var(--muted);margin-left:auto" id="qr-session-label"></span>
+      </div>
+      <div class="qr-area">
+        <button class="btn-fs" onclick="openFS()">⛶ Fullscreen</button>
+
+        <div class="qr-empty" id="qr-empty">
+          <div class="icon">□</div>
+          <p>Generate QR terlebih dahulu</p>
+        </div>
+
+        <div id="qr-wrap">
+          <div id="qrcode"></div>
+          <div class="qr-label">
+            <div class="qr-token-text" id="qr-tok">—</div>
+            <div class="qr-sub" id="qr-exp-lbl">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ KOLOM KANAN ═════════════════════════════════ -->
+  <div class="right-col">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat">
+        <div class="num blue" id="st-total">0</div>
+        <div class="lbl">Total Hadir</div>
+      </div>
+      <div class="stat">
+        <div class="num green" id="st-last">—</div>
+        <div class="lbl">Check-in Terakhir</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="st-sesi" style="font-size:16px;padding-top:4px">—</div>
+        <div class="lbl">Sesi Aktif</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <h3>Mahasiswa Hadir</h3>
+        <button class="btn-refresh-tbl" onclick="refreshTable()">↻ Refresh</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>User ID</th>
+              <th>Device ID</th>
+              <th>Status</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body">
+            <tr class="empty-row"><td colspan="5">Belum ada mahasiswa yang check-in.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══ FULLSCREEN ══════════════════════════════════════ -->
+<div id="fs">
+  <button class="btn-close-fs" onclick="closeFS()">✕ Tutup</button>
+  <div id="fs-qrcode"></div>
+  <div class="fs-token" id="fs-tok">—</div>
+  <div class="fs-sub"  id="fs-sub">—</div>
+  <div class="fs-cd"   id="fs-cd">2:00</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────
+var curToken    = null;
+var curExpires  = null;
+var curCourse   = null;
+var curSession  = null;
+var cdTimer     = null;
+var autoOn      = false;
+var pollTimer   = null;
+var TOTAL_SEC   = 120;
+
+// ── GENERATE ──────────────────────────────────────────
+function doGenerate() {
+  var c = document.getElementById("inp-course").value.trim();
+  var s = document.getElementById("inp-session").value.trim();
+  if (!c || !s) { toast("Course ID & Session ID wajib diisi", "err"); return; }
+
+  setGenBusy(true);
+  google.script.run
+    .withSuccessHandler(function(r) {
+      setGenBusy(false);
+      if (!r.ok) { toast("Error: " + r.error, "err"); return; }
+      curCourse  = c;
+      curSession = s;
+      applyToken(r.data.qr_token, r.data.expires_at);
+      toast("QR berhasil digenerate!", "ok");
+    })
+    .withFailureHandler(function(e) {
+      setGenBusy(false);
+      toast("Gagal: " + e.message, "err");
+    })
+    .serverGenerateQR(c, s);
+}
+
+function applyToken(token, expires_at) {
+  curToken   = token;
+  curExpires = expires_at;
+
+  // Header
+  document.getElementById("header-course-info").innerHTML =
+    "<strong>" + curCourse + "</strong> &nbsp;·&nbsp; " + curSession;
+
+  // Token box
+  document.getElementById("tb-token").textContent = token;
+  document.getElementById("tb-exp").textContent   = "Kedaluwarsa: " + fmtTime(expires_at);
+  document.getElementById("token-box").classList.add("show");
+
+  // Dot aktif
+  document.getElementById("dot-status").className = "dot green";
+  document.getElementById("dot-qr").className     = "dot green";
+
+  // QR card label
+  document.getElementById("qr-session-label").textContent = curCourse + "  ·  " + curSession;
+
+  // QR render
+  renderQR(token, "qrcode", 200);
+  document.getElementById("qr-empty").style.display = "none";
+  document.getElementById("qr-wrap").classList.add("show");
+  document.getElementById("qr-tok").textContent     = token;
+  document.getElementById("qr-exp-lbl").textContent = "Kedaluwarsa: " + fmtTime(expires_at);
+
+  // Fullscreen update
+  document.getElementById("fs-tok").textContent = token;
+  document.getElementById("fs-sub").textContent = "Kedaluwarsa: " + fmtTime(expires_at);
+  if (document.getElementById("fs").classList.contains("show")) {
+    renderQR(token, "fs-qrcode", 300);
+  }
+
+  // Stats sesi
+  document.getElementById("st-sesi").textContent = curCourse + " / " + curSession;
+
+  startCD(expires_at);
+  startPoll();
+}
+
+// ── QR RENDER ─────────────────────────────────────────
+function renderQR(token, elId, size) {
+  var el = document.getElementById(elId);
+  el.innerHTML = "";
+  new QRCode(el, { text: token, width: size, height: size,
+    colorDark: "#000", colorLight: "#fff",
+    correctLevel: QRCode.CorrectLevel.H });
+}
+
+// ── COUNTDOWN ─────────────────────────────────────────
+function startCD(expires_at) {
+  clearInterval(cdTimer);
+  var expMs = new Date(expires_at).getTime();
+
+  cdTimer = setInterval(function() {
+    var diff  = Math.max(0, Math.floor((expMs - Date.now()) / 1000));
+    var pct   = (diff / TOTAL_SEC) * 100;
+    var mm    = Math.floor(diff / 60);
+    var ss    = String(diff % 60).padStart(2, "0");
+    var txt   = mm + ":" + ss;
+
+    document.getElementById("cd-time").textContent = txt;
+    document.getElementById("fs-cd").textContent   = txt;
+
+    var bar = document.getElementById("bar");
+    bar.style.width = pct + "%";
+    bar.className   = "bar-fill" + (pct <= 25 ? " danger" : pct <= 50 ? " warn" : "");
+
+    var fsEl = document.getElementById("fs-cd");
+    fsEl.className  = "fs-cd" + (pct <= 25 ? " danger" : pct <= 50 ? " warn" : "");
+
+    if (autoOn && diff <= 15 && diff > 0) {
+      clearInterval(cdTimer);
+      doGenerate();
+    }
+
+    if (diff === 0) {
+      clearInterval(cdTimer);
+      document.getElementById("dot-status").className = "dot yellow";
+      document.getElementById("dot-qr").className     = "dot yellow";
+      if (!autoOn) toast("Token expired!", "err");
+    }
+  }, 1000);
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────
+function onAutoChange(v) {
+  autoOn = v;
+  document.getElementById("badge-auto").classList.toggle("show", v);
+  if (v) toast("Auto refresh aktif", "ok");
+}
+
+// ── FULLSCREEN ────────────────────────────────────────
+function openFS() {
+  if (!curToken) { toast("Generate QR dulu", "err"); return; }
+  document.getElementById("fs").classList.add("show");
+  renderQR(curToken, "fs-qrcode", 300);
+}
+function closeFS() { document.getElementById("fs").classList.remove("show"); }
+document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeFS(); });
+
+// ── POLLING TABLE ─────────────────────────────────────
+function startPoll() {
+  clearInterval(pollTimer);
+  refreshTable();
+  pollTimer = setInterval(refreshTable, 10000); // setiap 10 detik
+}
+
+function refreshTable() {
+  if (!curCourse || !curSession) return;
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.ok) return;
+      renderTable(r.data);
+    })
+    .withFailureHandler(function() {})
+    .serverGetAllPresence(curCourse, curSession);
+}
+
+function renderTable(data) {
+  document.getElementById("st-total").textContent = data.total;
+
+  var tbody = document.getElementById("tbl-body");
+  if (data.total === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Belum ada mahasiswa yang check-in.</td></tr>';
+    return;
+  }
+
+  // Urutkan terbaru di atas
+  var rows = data.results.slice().sort(function(a, b) {
+    return new Date(b.ts) - new Date(a.ts);
+  });
+
+  // Update waktu terakhir
+  document.getElementById("st-last").textContent = fmtTime(rows[0].ts);
+
+  var html = "";
+  rows.forEach(function(row, i) {
+    html += "<tr>" +
+      "<td style='color:var(--light)'>" + (i + 1) + "</td>" +
+      "<td style='font-weight:500'>" + row.user_id + "</td>" +
+      "<td style='color:var(--muted)'>" + (row.device_id || "—") + "</td>" +
+      "<td><span class='pill ok'>✓ " + row.status + "</span></td>" +
+      "<td style='color:var(--muted)'>" + fmtTime(row.ts) + "</td>" +
+      "</tr>";
+  });
+  tbody.innerHTML = html;
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function fmtTime(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString("id-ID", {
+      hour: "2-digit", minute: "2-digit", second: "2-digit"
+    });
+  } catch(e) { return iso; }
+}
+
+function setGenBusy(v) {
+  document.getElementById("btn-gen").disabled = v;
+  document.getElementById("gen-label").innerHTML = v
+    ? '<span class="spin"></span> Memproses...'
+    : "Generate QR";
+}
+
+function toast(msg, type) {
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.className   = "show " + (type || "");
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.className = ""; }, 3000);
+}
+</script>
+</body>
+</html>
