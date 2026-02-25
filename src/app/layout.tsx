@@ -3,8 +3,8 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "Presensi QR",
-  description: "Web presensi mahasiswa dengan scan QR dinamis",
+  title: "E-Kuliah",
+  description: "E-Kuliah — Web presensi mahasiswa dengan scan QR dinamis",
 };
 
 export const viewport: Viewport = {

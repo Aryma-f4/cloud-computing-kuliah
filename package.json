@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:ps": "docker compose ps"
   },
   "dependencies": {
     "@yudiel/react-qr-scanner": "^2.5.1",
