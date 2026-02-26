@@ -5,6 +5,13 @@ export type CheckInRequest = {
   session_id: string;
   qr_token: string;
   ts: string;
+  loc_lat?: number | null;
+  loc_lng?: number | null;
+  loc_acc?: number | null;
+  accel_x?: number | null;
+  accel_y?: number | null;
+  accel_z?: number | null;
+  accel_m?: number | null;
 };
 
 export type CheckInSuccess = {
