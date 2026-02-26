@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/src/components/ui/Card";
 import { Button } from "@/src/components/ui/Button";
@@ -7,7 +7,6 @@ import { ErrorAlert } from "@/src/components/ErrorAlert";
 import { checkIn } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
-import toast from "react-hot-toast";
 
 function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: number | null }> {
   return new Promise((resolve) => {
@@ -70,7 +69,7 @@ async function getAccel(): Promise<{ x: number | null; y: number | null; z: numb
   }
 }
 
-export default function Result() {
+function ResultContent() {
   const router = useRouter();
   const params = useSearchParams();
   const token = useMemo(() => params.get("token") ?? "", [params]);
@@ -117,7 +116,6 @@ export default function Result() {
       <h1 className="text-2xl font-semibold">Hasil Check-in</h1>
       {!payload && (
         <>
-          {toast.error("Terjadi kesalahan data, coba lagi")}
           <ErrorAlert>Terjadi kesalahan data, coba lagi</ErrorAlert>
           <Button onClick={() => router.replace("/")}>Kembali ke Home</Button>
         </>
@@ -167,5 +165,23 @@ export default function Result() {
         </>
       )}
     </div>
+  );
+}
+
+export default function Result() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-4">
+          <Card>
+            <div className="flex items-center justify-center p-6">
+              <div className="size-8 animate-spin rounded-full border-2 border-neutral-300 border-t-black dark:border-neutral-700 dark:border-t-white" />
+            </div>
+          </Card>
+        </div>
+      }
+    >
+      <ResultContent />
+    </Suspense>
   );
 }
