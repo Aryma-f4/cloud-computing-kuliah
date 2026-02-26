@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/src/components/ui/Card";
 import { Button } from "@/src/components/ui/Button";
 import { ErrorAlert } from "@/src/components/ErrorAlert";
-import { checkIn } from "@/src/lib/api";
+import { checkIn, postGps } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
 
@@ -25,49 +25,7 @@ function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: n
   });
 }
 
-async function getAccel(): Promise<{ x: number | null; y: number | null; z: number | null; m: number | null }> {
-  try {
-    // iOS permission
-    const DMObj = (window as unknown as { DeviceMotionEvent?: { requestPermission?: () => Promise<string> } }).DeviceMotionEvent;
-    if (DMObj && typeof DMObj.requestPermission === "function") {
-      try {
-        const perm = await DMObj.requestPermission();
-        if (perm !== "granted") return { x: null, y: null, z: null, m: null };
-      } catch {
-        return { x: null, y: null, z: null, m: null };
-      }
-    }
-    return await new Promise((resolve) => {
-      let resolved = false;
-      const handler = (ev: DeviceMotionEvent) => {
-        const a = ev.accelerationIncludingGravity;
-        if (!a) {
-          cleanup();
-          if (!resolved) resolve({ x: null, y: null, z: null, m: null });
-          resolved = true;
-          return;
-        }
-        const x = a.x ?? 0;
-        const y = a.y ?? 0;
-        const z = a.z ?? 0;
-        const m = Math.sqrt(x * x + y * y + z * z);
-        cleanup();
-        if (!resolved) resolve({ x, y, z, m });
-        resolved = true;
-      };
-      const cleanup = () => {
-        window.removeEventListener("devicemotion", handler);
-      };
-      window.addEventListener("devicemotion", handler, { once: true });
-      setTimeout(() => {
-        cleanup();
-        if (!resolved) resolve({ x: null, y: null, z: null, m: null });
-      }, 1500);
-    });
-  } catch {
-    return { x: null, y: null, z: null, m: null };
-  }
-}
+ 
 
 function ResultContent() {
   const router = useRouter();
@@ -90,27 +48,51 @@ function ResultContent() {
     };
   }, [token]);
   const [resp, setResp] = useState<CheckInResponse | null>(null);
+  const [loc, setLoc] = useState<{ lat: number | null; lng: number | null; acc: number | null } | null>(null);
+  const [stage, setStage] = useState<"gather" | "confirm" | "sending" | "done">("gather");
 
   useEffect(() => {
     if (!payload) return;
     (async () => {
-      const [loc, acc] = await Promise.all([getLocation(), getAccel()]);
-      const body = {
-        ...payload,
-        loc_lat: loc.lat,
-        loc_lng: loc.lng,
-        loc_acc: loc.acc,
-        accel_x: acc.x,
-        accel_y: acc.y,
-        accel_z: acc.z,
-        accel_m: acc.m,
-      };
-      checkIn(body)
-        .then((r) => setResp(r))
-        .catch(() => setResp({ ok: false, error: "server_error: network" }));
+      const l = await getLocation();
+      setLoc(l);
+      setStage("confirm");
     })();
   }, [payload]);
 
+  function makeOsmEmbed(lat: number, lng: number) {
+    const delta = 0.005;
+    const left = lng - delta;
+    const right = lng + delta;
+    const bottom = lat - delta;
+    const top = lat + delta;
+    const bbox = `${left}%2C${bottom}%2C${right}%2C${top}`;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
+  }
+
+  async function submit() {
+    if (!payload) return;
+    setStage("sending");
+    try {
+      if (loc?.lat != null && loc?.lng != null) {
+        try {
+          await postGps({
+            device_id: payload.device_id,
+            ts: getISOTime(),
+            lat: loc.lat,
+            lng: loc.lng,
+            accuracy_m: loc.acc ?? null,
+          });
+        } catch {}
+      }
+      const r = await checkIn(payload);
+      setResp(r);
+    } catch {
+      setResp({ ok: false, error: "server_error: network" });
+    } finally {
+      setStage("done");
+    }
+  }
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-4">
       <h1 className="text-2xl font-semibold">Hasil Check-in</h1>
@@ -121,7 +103,37 @@ function ResultContent() {
         </>
       )}
 
-      {payload && !resp && (
+      {payload && stage === "gather" && (
+        <Card>
+          <div className="flex items-center justify-center p-6">
+            <div className="size-8 animate-spin rounded-full border-2 border-neutral-300 border-t-black dark:border-neutral-700 dark:border-t-white" />
+          </div>
+        </Card>
+      )}
+
+      {payload && stage === "confirm" && (
+        <Card>
+          <div className="space-y-3">
+            <div className="text-sm text-neutral-700 dark:text-neutral-300">Konfirmasi lokasi sebelum kirim presensi</div>
+            {loc?.lat != null && loc?.lng != null ? (
+              <div className="overflow-hidden rounded-lg">
+                <iframe title="Lokasi Anda" src={makeOsmEmbed(loc.lat, loc.lng)} className="h-64 w-full border-0" />
+              </div>
+            ) : (
+              <ErrorAlert>Lokasi tidak tersedia (izinkan akses lokasi)</ErrorAlert>
+            )}
+            {loc?.acc != null && (
+              <div className="text-xs text-neutral-600 dark:text-neutral-400">Akurasi ±{Math.round(loc.acc)} m</div>
+            )}
+            <div className="flex gap-3 pt-2">
+              <Button onClick={submit}>Kirim Presensi</Button>
+              <Button variant="outline" onClick={() => router.replace("/")}>Batal</Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {payload && stage === "sending" && (
         <Card>
           <div className="flex items-center justify-center p-6">
             <div className="size-8 animate-spin rounded-full border-2 border-neutral-300 border-t-black dark:border-neutral-700 dark:border-t-white" />
