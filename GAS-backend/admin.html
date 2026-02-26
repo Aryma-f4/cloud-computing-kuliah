@@ -667,10 +667,6 @@ function applyToken(token, expires_at) {
   curToken   = token;
   curExpires = expires_at;
 
-  // Header
-  document.getElementById("header-course-info").innerHTML =
-    "<strong>" + curCourse + "</strong> &nbsp;·&nbsp; " + curSession;
-
   // Token box
   document.getElementById("tb-token").textContent = token;
   document.getElementById("tb-exp").textContent   = "Kedaluwarsa: " + fmtTime(expires_at);
