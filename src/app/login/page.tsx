@@ -5,18 +5,12 @@ import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { getItem, setItem, keys } from "@/src/lib/storage";
 import toast from "react-hot-toast";
-
-function makeDeviceId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `dev-${Math.random().toString(36).slice(2, 10)}`;
-}
+import { generateDeviceIdSync } from "@/src/lib/fingerprint";
 
 export default function Login() {
   const router = useRouter();
   const [userId, setUserId] = useState("");
-  const [deviceId, setDeviceId] = useState(makeDeviceId());
+  const [deviceId] = useState(() => generateDeviceIdSync());
 
   useEffect(() => {
     const u = getItem(keys.user_id);
@@ -26,13 +20,12 @@ export default function Login() {
 
   function handleSave() {
     const u = userId.trim();
-    const d = deviceId.trim();
-    if (!u || !d) {
+    if (!u) {
       toast.error("Semua field wajib diisi");
       return;
     }
     setItem(keys.user_id, u);
-    setItem(keys.device_id, d);
+    setItem(keys.device_id, deviceId);
     router.push("/");
   }
 
@@ -48,11 +41,12 @@ export default function Login() {
         />
       </div>
       <div className="space-y-3">
-        <label className="text-sm font-medium">Device ID</label>
+        <label className="text-sm font-medium">Device ID (otomatis)</label>
         <Input
           placeholder="Device ID"
           value={deviceId}
-          onChange={(e) => setDeviceId(e.target.value)}
+          readOnly
+          disabled
         />
       </div>
       <Button size="lg" onClick={handleSave}>

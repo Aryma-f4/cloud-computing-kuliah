@@ -5,22 +5,76 @@ import type {
   StatusQuery,
   StatusResponse,
 } from "@/src/types/presence";
+import type {
+  PostAccelRequest,
+  PostAccelResponse,
+  GetAccelLatestResponse,
+  PostGpsRequest,
+  PostGpsResponse,
+  GetGpsLatestResponse,
+  GetGpsHistoryResponse,
+} from "@/src/types/telemetry";
+
+async function requestJson(url: string, init?: RequestInit) {
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    throw new Error(`http_${res.status}`);
+  }
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json") && !ct.includes("text/plain")) {
+    throw new Error("invalid_response");
+  }
+  return res.json();
+}
 
 export async function checkIn(payload: CheckInRequest): Promise<CheckInResponse> {
-  const res = await fetch(`${BASE_URL}/presence/checkin`, {
+  return requestJson(`${BASE_URL}?path=presence/checkin`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload),
   });
-  return res.json();
 }
 
 export async function getStatus(query: StatusQuery): Promise<StatusResponse> {
   const params = new URLSearchParams(query as Record<string, string>);
-  const res = await fetch(`${BASE_URL}/presence/status?${params.toString()}`, {
+  return requestJson(`${BASE_URL}?path=presence/status&${params.toString()}`, {
     method: "GET",
   });
-  return res.json();
+}
+
+export async function postAccel(payload: PostAccelRequest): Promise<PostAccelResponse> {
+  return requestJson(`${BASE_URL}?path=telemetry/accel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAccelLatest(device_id: string): Promise<GetAccelLatestResponse> {
+  const params = new URLSearchParams({ device_id });
+  return requestJson(`${BASE_URL}?path=telemetry/accel/latest&${params.toString()}`, {
+    method: "GET",
+  });
+}
+
+export async function postGps(payload: PostGpsRequest): Promise<PostGpsResponse> {
+  return requestJson(`${BASE_URL}?path=telemetry/gps`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getGpsLatest(device_id: string): Promise<GetGpsLatestResponse> {
+  const params = new URLSearchParams({ device_id });
+  return requestJson(`${BASE_URL}?path=telemetry/gps/latest&${params.toString()}`, {
+    method: "GET",
+  });
+}
+
+export async function getGpsHistory(device_id: string, limit = 100): Promise<GetGpsHistoryResponse> {
+  const params = new URLSearchParams({ device_id, limit: String(limit) });
+  return requestJson(`${BASE_URL}?path=telemetry/gps/history&${params.toString()}`, {
+    method: "GET",
+  });
 }
