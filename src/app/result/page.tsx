@@ -7,6 +7,7 @@ import { ErrorAlert } from "@/src/components/ErrorAlert";
 import { checkIn, postGps } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
+import { User } from "lucide-react";
 
 function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: number | null }> {
   return new Promise((resolve) => {
@@ -94,8 +95,19 @@ function ResultContent() {
     }
   }
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-4">
-      <h1 className="text-2xl font-semibold">Hasil Check-in</h1>
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-8 p-6">
+      <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+          Laman Presensi
+        </div>
+        <div className="mt-1 text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+          Hasil Check-in
+        </div>
+        <div className="mt-3 inline-flex items-center justify-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
+          <User className="h-4 w-4" />
+          NIM: <span className="font-semibold">{getItem(keys.user_id) || "User"}</span>
+        </div>
+      </div>
       {!payload && (
         <>
           <ErrorAlert>Terjadi kesalahan data, coba lagi</ErrorAlert>
