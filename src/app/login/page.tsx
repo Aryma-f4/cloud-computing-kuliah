@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { getItem, setItem, keys } from "@/src/lib/storage";
 import toast from "react-hot-toast";
 import { generateDeviceIdSync } from "@/src/lib/fingerprint";
+import { Input } from "@/src/components/ui/Input";
+import { Button } from "@/src/components/ui/Button";
+import { User, Fingerprint } from "lucide-react";
 
 export default function Login() {
   const router = useRouter();
@@ -29,59 +32,60 @@ export default function Login() {
   }
 
   return (
-    <section className="bg-gray-50 dark:bg-gray-900 min-h-dvh flex items-center justify-center">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto w-full max-w-md lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white text-center">
-              Aplikasi Presensi QR
-            </h1>
-            <form className="space-y-4 md:space-y-6" onSubmit={handleSave}>
-              <div>
-                <label
-                  htmlFor="userId"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  NIM / User ID
-                </label>
-                <input
-                  type="text"
-                  name="userId"
-                  id="userId"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Masukkan NIM Anda"
-                  required
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="deviceId"
-                  className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >
-                  Device ID (Otomatis)
-                </label>
-                <input
-                  type="text"
-                  name="deviceId"
-                  id="deviceId"
-                  value={deviceId}
-                  className="bg-gray-200 border border-gray-300 text-gray-500 rounded-lg cursor-not-allowed block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
-                  readOnly
-                  disabled
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-colors"
-              >
-                Simpan & Mulai
-              </button>
-            </form>
+    <section className="bg-gray-100 dark:bg-neutral-950 min-h-dvh">
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-8 p-6">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+            Laman Presensi
+          </div>
+          <div className="mt-1 text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+            Login Akun
           </div>
         </div>
+
+        <form className="space-y-6" onSubmit={handleSave}>
+          <div className="space-y-2">
+            <label
+              htmlFor="userId"
+              className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 ml-1 inline-flex items-center gap-2"
+            >
+              <User className="h-4 w-4" />
+              NIM / User ID
+            </label>
+            <Input
+              id="userId"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+              placeholder="Masukkan NIM Anda"
+              required
+              className="h-12 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="deviceId"
+              className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 ml-1 inline-flex items-center gap-2"
+            >
+              <Fingerprint className="h-4 w-4" />
+              Device ID (Otomatis)
+            </label>
+            <Input
+              id="deviceId"
+              value={deviceId}
+              readOnly
+              disabled
+              className="h-12 bg-neutral-200 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400 cursor-not-allowed"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="h-14 w-full rounded-xl bg-neutral-900 text-white shadow-none hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors"
+          >
+            Simpan & Mulai
+          </Button>
+        </form>
       </div>
     </section>
   );

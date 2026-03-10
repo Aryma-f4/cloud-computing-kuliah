@@ -42,6 +42,10 @@ function doGet(e) {
       return getStatus(e.parameter);
     }
 
+    if (path === "presence/history") {
+      return getPresenceHistory(e.parameter);
+    }
+
     if (path === "telemetry/accel/latest") {
       return telemetryAccelLatest(e.parameter);
     }
@@ -225,6 +229,50 @@ function getStatus(params) {
     status: "not_checked_in", last_ts: null
   });
 }
+
+function getPresenceHistory(params) {
+  const { user_id } = params;
+  const course_id   = params.course_id  || null;
+  const session_id  = params.session_id || null;
+  var   limit       = Number(params.limit);
+
+  if (!user_id) return jsonResponse(false, "missing_field: user_id");
+  if (isNaN(limit) || limit <= 0) limit = 50;
+
+  const presenceSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("presence");
+  if (!presenceSheet) return jsonResponse(false, "sheet_not_found: presence");
+
+  const rows    = presenceSheet.getDataRange().getValues();
+  const results = [];
+
+  // headers: presence_id[0], user_id[1], device_id[2], course_id[3],
+  //          session_id[4], status[5], ts[6]
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (String(row[1]).trim() !== String(user_id).trim()) continue;
+    if (course_id  && String(row[3]).trim() !== String(course_id).trim())  continue;
+    if (session_id && String(row[4]).trim() !== String(session_id).trim()) continue;
+
+    results.push({
+      presence_id: row[0],
+      course_id:   row[3],
+      session_id:  row[4],
+      status:      row[5],
+      ts:          row[6]
+    });
+  }
+
+  // Ambil N record terbaru
+  const paginated = results.slice(-limit).reverse();
+
+  return jsonResponse(true, null, {
+    user_id: user_id,
+    total:   results.length,
+    limit:   limit,
+    records: paginated
+  });
+}
+
 
 function getOrCreateSheet_(name, headers) {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
