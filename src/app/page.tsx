@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
 import { setItem, getItem, keys } from "@/src/lib/storage";
-import { QrCode, BadgeCheck, User, BookOpen, CalendarDays } from "lucide-react";
+import { QrCode, BadgeCheck, User, BookOpen, CalendarDays, Activity } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
@@ -88,6 +88,15 @@ export default function Home() {
         >
           <BadgeCheck className="mr-2 h-5 w-5" />
           Cek Status Presensi
+        </Button>
+        <Button
+          variant="outline"
+          className="h-14 w-full rounded-xl border-neutral-200 text-neutral-700 shadow-none hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 transition-colors"
+          onClick={() => router.push("/accelerometer")}
+          disabled={!courseId || !sessionId}
+        >
+          <Activity className="mr-2 h-5 w-5" />
+          Accelerometer
         </Button>
       </div>
     </div>
