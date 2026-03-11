@@ -8,6 +8,7 @@ import { getItem, setItem, keys } from "@/src/lib/storage";
 import { getStatus } from "@/src/lib/api";
 import type { StatusResponse } from "@/src/types/presence";
 import { BadgeCheck, BookOpen, CalendarDays, User, Hash, AlertCircle, RefreshCw, QrCode } from "lucide-react";
+import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Status() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function Status() {
   }
 
   return (
+    <PageTransition>
     <section className="bg-gray-100 dark:bg-neutral-950 min-h-dvh">
       <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-8 p-6">
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
@@ -161,5 +163,6 @@ export default function Status() {
         )}
       </div>
     </section>
+    </PageTransition>
   );
 }
