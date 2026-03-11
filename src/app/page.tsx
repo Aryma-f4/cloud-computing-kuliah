@@ -6,6 +6,7 @@ import {
   QrCode, BadgeCheck, BookOpen, CalendarDays,
   Activity, ChevronRight, Wifi,
 } from "lucide-react";
+import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Home() {
   const router = useRouter();
@@ -30,7 +31,8 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950 mb-15 mt-15 rounded-2xl ">
+    <PageTransition>
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950  rounded-2xl ">
 
       {/* ── HERO HEADER ── */}
       <div className="relative bg-neutral-900 dark:bg-black px-6 pt-14 pb-10 overflow-hidden rounded-2xl"> 
@@ -196,5 +198,6 @@ export default function Home() {
         )}
       </div>
     </div>
+    </PageTransition>
   );
 }

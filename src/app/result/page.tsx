@@ -7,6 +7,7 @@ import { ErrorAlert } from "@/src/components/ErrorAlert";
 import { checkIn, postGps } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
+import { PageTransition } from "@/src/components/PageTransition";
 
 function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: number | null }> {
   return new Promise((resolve) => {
@@ -248,19 +249,21 @@ function ResultContent() {
 
 export default function Result() {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-5 bg-neutral-50 dark:bg-neutral-950">
-          <Card>
-            <div className="flex flex-col items-center justify-center p-10 space-y-4">
-              <div className="size-10 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600 dark:border-neutral-700 dark:border-t-blue-500" />
-              <p className="text-sm font-medium text-neutral-500">Menyiapkan halaman...</p>
-            </div>
-          </Card>
-        </div>
-      }
-    >
-      <ResultContent />
-    </Suspense>
+    <PageTransition>
+      <Suspense
+        fallback={
+          <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-5 bg-neutral-50 dark:bg-neutral-950">
+            <Card>
+              <div className="flex flex-col items-center justify-center p-10 space-y-4">
+                <div className="size-10 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600 dark:border-neutral-700 dark:border-t-blue-500" />
+                <p className="text-sm font-medium text-neutral-500">Menyiapkan halaman...</p>
+              </div>
+            </Card>
+          </div>
+        }
+      >
+        <ResultContent />
+      </Suspense>
+    </PageTransition>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/src/components/ui/Button";
 import { QrScanner } from "@/src/components/QrScanner";
 import { getItem, keys } from "@/src/lib/storage";
 import { User, QrCode, Camera } from "lucide-react";
+import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Scan() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function Scan() {
     }
   }, [router]);
   return (
+    <PageTransition>
     <section className="bg-gray-100 dark:bg-neutral-950 min-h-dvh">
       <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-8 p-6">
         <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
@@ -64,5 +66,6 @@ export default function Scan() {
         </div>
       </div>
     </section>
+    </PageTransition>
   );
 }
