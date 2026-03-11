@@ -41,7 +41,7 @@ export default function LoginPage() {
     <section className="flex min-h-dvh items-center justify-center bg-[#f7f7f7] p-0 sm:p-6">
       <div className="relative h-dvh w-full max-w-[393px] overflow-hidden bg-white sm:h-[852px] sm:rounded-[28px] sm:shadow-xl">
         {/* Top decorative area */}
-        <div className="relative h-[320px] overflow-hidden bg-[#81A6C6]">
+        <div className="relative h-[320px] overflow-hidden bg-primary">
           <div
             className="absolute inset-0 opacity-25"
             style={{
@@ -144,7 +144,7 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="mt-2 h-12 w-full rounded-xl bg-[#81A6C6] text-sm font-semibold text-white shadow-none transition hover:bg-[#6d94b5]"
+              className="mt-2 h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white shadow-none transition hover:bg-hover"
             >
               Simpan & Mulai
             </Button>
