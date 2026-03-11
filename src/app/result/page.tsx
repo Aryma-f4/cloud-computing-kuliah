@@ -7,7 +7,6 @@ import { ErrorAlert } from "@/src/components/ErrorAlert";
 import { checkIn, postGps } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
-import { User } from "lucide-react";
 
 function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: number | null }> {
   return new Promise((resolve) => {
@@ -83,7 +82,7 @@ function ResultContent() {
             lng: loc.lng,
             accuracy_m: loc.acc ?? null,
           });
-        } catch {}
+        } catch { }
       }
       const r = await checkIn(payload);
       setResp(r);
@@ -187,7 +186,7 @@ function ResultContent() {
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Berhasil Terkirim!</h3>
               <p className="text-sm text-neutral-500 dark:text-neutral-400">Kehadiran Anda sudah tercatat.</p>
             </div>
-            
+
             <div className="w-full mt-2 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 border border-neutral-100 dark:border-neutral-800 text-left space-y-3 text-sm">
               <div className="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-800 pb-2">
                 <span className="text-neutral-500">ID Presensi</span>
