@@ -35,23 +35,23 @@ export default function Home() {
     <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950  rounded-2xl ">
 
       {/* ── HERO HEADER ── */}
-      <div className="relative bg-neutral-900 dark:bg-black px-6 pt-14 pb-10 overflow-hidden rounded-2xl"> 
+      <div className="relative bg-[#81A6C6] dark:bg-[#4a7da0] px-6 pt-14 pb-10 overflow-hidden rounded-2xl"> 
         {/* Decorative ambient circles */}
-        <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/5" />
-        <div className="absolute top-8 -right-4 h-24 w-24 rounded-full bg-white/5" />
+        <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10" />
+        <div className="absolute top-8 -right-4 h-24 w-24 rounded-full bg-[#9CD5FF]/20" />
 
         <div className="relative">
           <div className="flex items-center gap-2 mb-5">
-            <span className="flex items-center gap-1.5 rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
+            <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
               <Wifi className="h-3 w-3" />
               Online
             </span>
           </div>
-          <p className="text-sm text-neutral-400 font-medium">Selamat datang,</p>
+          <p className="text-sm text-white/70 font-medium">Selamat datang,</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
             {userId || "Mahasiswa"}
           </h1>
-          <p className="mt-1 text-sm text-neutral-500">E-Absen · Presensi QR Dinamis</p>
+          <p className="mt-1 text-sm text-white/60">E-Absen · Presensi QR Dinamis</p>
         </div>
       </div>
 
@@ -119,14 +119,14 @@ export default function Home() {
             "w-full flex items-center justify-between rounded-2xl px-5 py-5 text-left",
             "transition-all duration-200",
             isReady
-              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-lg shadow-neutral-900/20 active:scale-[0.98]"
+              ? "bg-[#81A6C6] text-white shadow-lg shadow-[#81A6C6]/30 active:scale-[0.98] hover:bg-[#6d94b5]"
               : "bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed",
           ].join(" ")}
         >
           <div className="flex items-center gap-4">
             <div className={[
               "flex h-12 w-12 items-center justify-center rounded-xl",
-              isReady ? "bg-white/15 dark:bg-black/15" : "bg-neutral-300 dark:bg-neutral-700",
+              isReady ? "bg-white/20" : "bg-neutral-300 dark:bg-neutral-700",
             ].join(" ")}>
               <QrCode className="h-6 w-6" />
             </div>

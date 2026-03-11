@@ -41,7 +41,7 @@ export default function LoginPage() {
     <section className="flex min-h-dvh items-center justify-center bg-[#f7f7f7] p-0 sm:p-6">
       <div className="relative h-dvh w-full max-w-[393px] overflow-hidden bg-white sm:h-[852px] sm:rounded-[28px] sm:shadow-xl">
         {/* Top decorative area */}
-        <div className="relative h-[320px] overflow-hidden bg-[#ff8b8b]">
+        <div className="relative h-[320px] overflow-hidden bg-[#81A6C6]">
           <div
             className="absolute inset-0 opacity-25"
             style={{
@@ -121,7 +121,7 @@ export default function LoginPage() {
                 placeholder="Masukkan NIM Anda"
                 autoFocus
                 required
-                className="h-12 w-full rounded-xl border border-[#f3b1b1] bg-white px-4 text-neutral-800 placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-[#ff8b8b]"
+                className="h-12 w-full rounded-xl border border-[#AACDDC] bg-white px-4 text-neutral-800 placeholder:text-neutral-400 focus-visible:ring-2 focus-visible:ring-[#81A6C6]"
               />
             </div>
 
@@ -131,7 +131,7 @@ export default function LoginPage() {
                 Device ID (Otomatis)
               </div>
 
-              <div className="rounded-xl border border-dashed border-[#f3b1b1] bg-[#fff7f7] px-4 py-3">
+              <div className="rounded-xl border border-dashed border-[#AACDDC] bg-[#f0f7ff] px-4 py-3">
                 <p className="text-sm font-medium break-all text-neutral-800">
                   {deviceId}
                 </p>
@@ -144,19 +144,19 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="mt-2 h-12 w-full rounded-xl bg-[#ff8b8b] text-sm font-semibold text-white shadow-none transition hover:bg-[#ff7a7a]"
+              className="mt-2 h-12 w-full rounded-xl bg-[#81A6C6] text-sm font-semibold text-white shadow-none transition hover:bg-[#6d94b5]"
             >
               Simpan & Mulai
             </Button>
           </form>
 
           <div className="mt-8 flex items-center justify-end gap-3">
-            <span className="text-sm font-medium text-neutral-400">
+            {/* <span className="text-sm font-medium text-neutral-400">
               Masuk ke presensi
-            </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff8b8b] text-white">
+            </span> */}
+            {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#81A6C6] text-white">
               <ArrowRight className="h-5 w-5" />
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

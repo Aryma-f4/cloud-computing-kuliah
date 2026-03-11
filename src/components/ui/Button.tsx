@@ -15,7 +15,7 @@ export function Button({ className, variant, size, ...props }: Props) {
   const variantClass =
     variant === "outline"
       ? "border border-neutral-300 text-black hover:bg-neutral-100 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-800"
-      : "bg-black text-white hover:bg-neutral-800";
+      : "bg-[#81A6C6] text-white hover:bg-[#6d94b5]";
   const sizeClass = size === "lg" ? "h-12 px-5" : "h-11 px-4";
   return (
     <button
