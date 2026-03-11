@@ -1,54 +1,61 @@
 "use client";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card } from "@/src/components/ui/Card";
-import { Button } from "@/src/components/ui/Button";
-import { ErrorAlert } from "@/src/components/ErrorAlert";
 import { checkIn, postGps } from "@/src/lib/api";
 import { getItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
 import { PageTransition } from "@/src/components/PageTransition";
+import { MapPin, CheckCircle2, XCircle, Loader2, ChevronLeft, ShieldCheck } from "lucide-react";
 
 function getLocation(): Promise<{ lat: number | null; lng: number | null; acc: number | null }> {
   return new Promise((resolve) => {
     if (!("geolocation" in navigator)) return resolve({ lat: null, lng: null, acc: null });
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          lat: pos.coords.latitude ?? null,
-          lng: pos.coords.longitude ?? null,
-          acc: pos.coords.accuracy ?? null,
-        });
-      },
+      (pos) => resolve({ lat: pos.coords.latitude ?? null, lng: pos.coords.longitude ?? null, acc: pos.coords.accuracy ?? null }),
       () => resolve({ lat: null, lng: null, acc: null }),
       { enableHighAccuracy: true, timeout: 4000, maximumAge: 0 }
     );
   });
 }
 
+function makeOsmEmbed(lat: number, lng: number) {
+  const d = 0.005;
+  const bbox = `${lng - d}%2C${lat - d}%2C${lng + d}%2C${lat + d}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
+}
+
+/* ── Error message map ── */
+const ERROR_MSG: Record<string, string> = {
+  token_invalid:    "QR Code tidak valid atau tidak dikenali.",
+  token_expired:    "QR Code sudah kedaluwarsa. Silakan minta dosen untuk refresh.",
+  already_checked_in: "Anda sudah melakukan presensi untuk sesi ini.",
+};
+function errMsg(e?: string) {
+  if (!e) return "Terjadi kesalahan yang tidak diketahui.";
+  if (ERROR_MSG[e]) return ERROR_MSG[e];
+  if (e.startsWith("missing_field")) return "Data tidak lengkap. Silakan coba lagi.";
+  if (e.startsWith("server_error")) return "Gangguan server. Coba beberapa saat lagi.";
+  return "Terjadi kesalahan yang tidak diketahui.";
+}
+
+/* ─────────────────── MAIN COMPONENT ─────────────────── */
 function ResultContent() {
   const router = useRouter();
   const params = useSearchParams();
   const token = useMemo(() => params.get("token") ?? "", [params]);
+
   const payload = useMemo(() => {
     if (!token) return null;
-    const user_id = getItem(keys.user_id);
+    const user_id   = getItem(keys.user_id);
     const device_id = getItem(keys.device_id);
     const course_id = getItem(keys.last_course_id);
-    const session_id = getItem(keys.last_session_id);
+    const session_id= getItem(keys.last_session_id);
     if (!user_id || !device_id || !course_id || !session_id) return null;
-    return {
-      user_id,
-      device_id,
-      course_id,
-      session_id,
-      qr_token: token,
-      ts: getISOTime(),
-    };
+    return { user_id, device_id, course_id, session_id, qr_token: token, ts: getISOTime() };
   }, [token]);
-  
-  const [resp, setResp] = useState<CheckInResponse | null>(null);
-  const [loc, setLoc] = useState<{ lat: number | null; lng: number | null; acc: number | null } | null>(null);
+
+  const [resp,  setResp]  = useState<CheckInResponse | null>(null);
+  const [loc,   setLoc]   = useState<{ lat: number | null; lng: number | null; acc: number | null } | null>(null);
   const [stage, setStage] = useState<"gather" | "confirm" | "sending" | "done">("gather");
 
   useEffect(() => {
@@ -60,30 +67,12 @@ function ResultContent() {
     })();
   }, [payload]);
 
-  function makeOsmEmbed(lat: number, lng: number) {
-    const delta = 0.005;
-    const left = lng - delta;
-    const right = lng + delta;
-    const bottom = lat - delta;
-    const top = lat + delta;
-    const bbox = `${left}%2C${bottom}%2C${right}%2C${top}`;
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
-  }
-
   async function submit() {
     if (!payload) return;
     setStage("sending");
     try {
       if (loc?.lat != null && loc?.lng != null) {
-        try {
-          await postGps({
-            device_id: payload.device_id,
-            ts: getISOTime(),
-            lat: loc.lat,
-            lng: loc.lng,
-            accuracy_m: loc.acc ?? null,
-          });
-        } catch { }
+        try { await postGps({ device_id: payload.device_id, ts: getISOTime(), lat: loc.lat, lng: loc.lng, accuracy_m: loc.acc ?? null }); } catch { }
       }
       const r = await checkIn(payload);
       setResp(r);
@@ -94,155 +83,220 @@ function ResultContent() {
     }
   }
 
+  /* ── helpers ── */
+  const isSuccess = stage === "done" && resp?.ok;
+  const isError   = stage === "done" && resp && !resp.ok;
+
+  const heroColor =
+    stage === "done" && resp?.ok  ? "bg-emerald-500" :
+    stage === "done" && resp      ? "bg-red-500"     :
+    "bg-primary";
+
   return (
-    <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 p-4">
-      <h1 className="text-2xl font-semibold">Hasil Check-in</h1>
-      {!payload && (
-        <div className="flex flex-col gap-4 mt-4">
-          <ErrorAlert>Data sesi tidak lengkap atau QR Code tidak valid. Silakan coba lagi.</ErrorAlert>
-          <Button onClick={() => router.replace("/")} className="w-full py-3 rounded-xl font-medium">
-            Kembali ke Beranda
-          </Button>
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950">
+
+      {/* ── HERO HEADER ── */}
+      <div className={`relative px-6 pt-14 pb-10 overflow-hidden transition-colors duration-500 ${heroColor}`}>
+        {/* ambient circles */}
+        <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10" />
+        <div className="absolute top-8  -right-4  h-24 w-24 rounded-full bg-white/10" />
+
+        <div className="relative">
+          {/* Back button */}
+          <button
+            onClick={() => router.replace("/")}
+            className="mb-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <p className="text-sm font-medium text-white/70">E-Absen · Presensi QR</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-white">
+            {stage === "gather"  && "Mendeteksi Lokasi"}
+            {stage === "confirm" && "Konfirmasi Lokasi"}
+            {stage === "sending" && "Mengirim Data"}
+            {isSuccess           && "Presensi Berhasil!"}
+            {isError             && "Presensi Gagal"}
+          </h1>
+          <p className="mt-1 text-sm text-white/60">
+            {stage === "gather"  && "Mohon tunggu sebentar..."}
+            {stage === "confirm" && "Pastikan lokasi Anda sudah benar"}
+            {stage === "sending" && "Sedang mengirim ke server..."}
+            {isSuccess           && "Kehadiran Anda telah tercatat"}
+            {isError             && "Silakan coba kembali"}
+          </p>
         </div>
-      )}
+      </div>
 
-      {/* STAGE: GATHERING LOCATION */}
-      {payload && stage === "gather" && (
-        <Card>
-          <div className="flex flex-col items-center justify-center p-10 space-y-4">
-            <div className="size-10 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600 dark:border-neutral-700 dark:border-t-blue-500" />
-            <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 animate-pulse">
-              Mendeteksi lokasi Anda...
-            </p>
-          </div>
-        </Card>
-      )}
+      {/* ── CONTENT AREA ── */}
+      <div className="flex flex-1 flex-col px-4 py-6 space-y-4">
 
-      {/* STAGE: CONFIRMATION (MAP) */}
-      {payload && stage === "confirm" && (
-        <Card>
-          <div className="flex flex-col p-5 space-y-5">
-            <div className="flex flex-col space-y-1">
-              <h2 className="text-base font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
-                </svg>
-                Konfirmasi Lokasi
-              </h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Lokasi ini akan dikirim sebagai bukti presensi Anda.
+        {/* ── NO PAYLOAD ── */}
+        {!payload && (
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl bg-white dark:bg-neutral-900 p-5 shadow-sm ring-1 ring-black/5">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                Data sesi tidak lengkap atau QR Code tidak valid. Silakan kembali dan coba lagi.
               </p>
             </div>
+            <button
+              onClick={() => router.replace("/")}
+              className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-white transition hover:bg-hover active:scale-[0.98]"
+            >
+              Kembali ke Beranda
+            </button>
+          </div>
+        )}
 
-            {loc?.lat != null && loc?.lng != null ? (
-              <div className="relative overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-100 dark:bg-neutral-800 shadow-inner">
+        {/* ── STAGE: GATHER ── */}
+        {payload && stage === "gather" && (
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white dark:bg-neutral-900 py-16 shadow-sm ring-1 ring-black/5 space-y-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-neutral-500 animate-pulse">Mendeteksi lokasi Anda...</p>
+          </div>
+        )}
+
+        {/* ── STAGE: CONFIRM ── */}
+        {payload && stage === "confirm" && (
+          <>
+            {/* Map card */}
+            <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-black/5 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+                <MapPin className="h-4 w-4 text-primary" />
+                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Lokasi Anda</p>
                 {loc?.acc != null && (
-                  <div className="absolute top-2 right-2 z-10 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-medium text-neutral-700 dark:text-neutral-300 shadow-sm border border-neutral-200 dark:border-neutral-700">
-                    Akurasi ±{Math.round(loc.acc)} m
-                  </div>
+                  <span className="ml-auto text-[11px] text-neutral-400">±{Math.round(loc.acc)} m</span>
                 )}
-                <iframe title="Lokasi Anda" src={makeOsmEmbed(loc.lat, loc.lng)} className="h-56 w-full border-0 pointer-events-none" />
               </div>
-            ) : (
-              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 text-center">
-                <p className="text-sm font-medium text-red-600 dark:text-red-400 mb-1">Lokasi Tidak Tersedia</p>
-                <p className="text-xs text-red-500 dark:text-red-500/80">Mohon izinkan akses lokasi pada browser Anda.</p>
-              </div>
-            )}
 
+              {loc?.lat != null && loc?.lng != null ? (
+                <iframe
+                  title="Lokasi Anda"
+                  src={makeOsmEmbed(loc.lat, loc.lng)}
+                  className="h-52 w-full border-0 pointer-events-none"
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-10 text-center px-4">
+                  <MapPin className="h-8 w-8 text-neutral-300" />
+                  <p className="text-sm font-medium text-neutral-500">Lokasi tidak tersedia</p>
+                  <p className="text-xs text-neutral-400">Izinkan akses lokasi di browser Anda, lalu coba lagi.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Info card */}
+            <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-black/5 overflow-hidden">
+              <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Detail Presensi</p>
+              </div>
+              {[
+                ["Mahasiswa",  payload.user_id],
+                ["Mata Kuliah",payload.course_id],
+                ["Sesi",       payload.session_id],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between px-4 py-3 border-b border-neutral-50 dark:border-neutral-800 last:border-0">
+                  <span className="text-xs text-neutral-400">{label}</span>
+                  <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
             <div className="flex flex-col gap-3 pt-2">
-              <Button onClick={submit} className="w-full py-3 rounded-xl font-medium shadow-sm bg-blue-600 hover:bg-blue-700 text-white">
+              <button
+                onClick={submit}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition hover:bg-hover active:scale-[0.98]"
+              >
+                <ShieldCheck className="h-4 w-4" />
                 Kirim Presensi Sekarang
-              </Button>
-              <Button variant="outline" onClick={() => router.replace("/")} className="w-full py-3 rounded-xl">
+              </button>
+              <button
+                onClick={() => router.replace("/")}
+                className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 py-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 transition hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
                 Batalkan
-              </Button>
+              </button>
             </div>
+          </>
+        )}
+
+        {/* ── STAGE: SENDING ── */}
+        {payload && stage === "sending" && (
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white dark:bg-neutral-900 py-16 shadow-sm ring-1 ring-black/5 space-y-4">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-sm font-medium text-neutral-500 animate-pulse">Mengirim data presensi...</p>
           </div>
-        </Card>
-      )}
+        )}
 
-      {/* STAGE: SENDING DATA */}
-      {payload && stage === "sending" && (
-        <Card>
-          <div className="flex flex-col items-center justify-center p-10 space-y-4">
-            <div className="size-10 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600 dark:border-neutral-700 dark:border-t-blue-500" />
-            <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 animate-pulse">
-              Mengirim data presensi...
-            </p>
-          </div>
-        </Card>
-      )}
-
-      {/* STAGE: DONE - SUCCESS */}
-      {payload && resp && resp.ok && (
-        <Card>
-          <div className="flex flex-col items-center text-center p-8 space-y-4">
-            <div className="flex size-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 dark:text-green-500">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
-              </svg>
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Berhasil Terkirim!</h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Kehadiran Anda sudah tercatat.</p>
-            </div>
-
-            <div className="w-full mt-2 bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 border border-neutral-100 dark:border-neutral-800 text-left space-y-3 text-sm">
-              <div className="flex justify-between items-center border-b border-neutral-200 dark:border-neutral-800 pb-2">
-                <span className="text-neutral-500">ID Presensi</span>
-                <span className="font-mono font-semibold text-neutral-900 dark:text-white">{resp.data.presence_id}</span>
+        {/* ── DONE: SUCCESS ── */}
+        {isSuccess && resp && (
+          <>
+            <div className="flex flex-col items-center rounded-2xl bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-black/5 py-10 px-6 text-center space-y-3">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" strokeWidth={2.5} />
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-neutral-500">Status</span>
-                <span className="font-semibold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2.5 py-0.5 rounded-full text-xs uppercase tracking-wider">
+              <div>
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Berhasil Terkirim!</h2>
+                <p className="text-sm text-neutral-500 mt-0.5">Kehadiran Anda sudah tercatat.</p>
+              </div>
+            </div>
+
+            {/* Receipt card */}
+            <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-black/5 overflow-hidden">
+              <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+                <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">Bukti Presensi</p>
+              </div>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-50 dark:border-neutral-800">
+                <span className="text-xs text-neutral-400">ID Presensi</span>
+                <span className="font-mono text-sm font-semibold text-neutral-900 dark:text-neutral-100">{resp.data.presence_id}</span>
+              </div>
+              <div className="flex items-center justify-between px-4 py-3">
+                <span className="text-xs text-neutral-400">Status</span>
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                   {resp.data.status}
                 </span>
               </div>
             </div>
 
-            <Button onClick={() => router.replace("/")} className="w-full mt-4 py-3 rounded-xl font-medium">
+            <button
+              onClick={() => router.replace("/")}
+              className="w-full rounded-2xl bg-neutral-900 dark:bg-white py-4 text-sm font-semibold text-white dark:text-neutral-900 transition hover:bg-neutral-700 dark:hover:bg-neutral-200 active:scale-[0.98]"
+            >
               Selesai & Kembali
-            </Button>
-          </div>
-        </Card>
-      )}
+            </button>
+          </>
+        )}
 
-      {/* STAGE: DONE - ERROR */}
-      {payload && resp && !resp.ok && (
-        <Card>
-           <div className="flex flex-col items-center text-center p-6 space-y-4">
-            <div className="flex size-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-red-500">
-                <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
-              </svg>
-            </div>
-            
-            <div className="space-y-1 w-full">
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Presensi Gagal</h3>
-              <ErrorAlert>
-                {resp.error === "token_invalid" && "QR Code tidak valid atau tidak dikenali."}
-                {resp.error === "token_expired" && "QR Code sudah kedaluwarsa. Silakan minta dosen untuk refresh."}
-                {resp.error === "already_checked_in" && "Anda sudah melakukan presensi untuk sesi ini sebelumnya."}
-                {resp.error?.startsWith("missing_field") && "Terjadi kesalahan kelengkapan data. Silakan coba lagi."}
-                {resp.error?.startsWith("server_error") && "Terjadi gangguan pada server. Coba beberapa saat lagi."}
-                {![
-                  "token_invalid",
-                  "token_expired",
-                  "already_checked_in",
-                ].includes(resp.error) &&
-                  !resp.error?.startsWith("missing_field") &&
-                  !resp.error?.startsWith("server_error") &&
-                  "Gagal melakukan presensi. Terjadi kesalahan yang tidak diketahui."}
-              </ErrorAlert>
+        {/* ── DONE: ERROR ── */}
+        {isError && resp && (
+          <>
+            <div className="flex flex-col items-center rounded-2xl bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-black/5 py-10 px-6 text-center space-y-3">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-white">Presensi Gagal</h2>
+                <p className="mt-1 text-sm text-neutral-500">{errMsg(resp.error)}</p>
+              </div>
             </div>
 
-            <Button onClick={() => router.replace("/scan")} className="w-full mt-2 py-3 rounded-xl font-medium">
-              Scan Ulang QR Code
-            </Button>
-          </div>
-        </Card>
-      )}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => router.replace("/scan")}
+                className="w-full rounded-2xl bg-primary py-4 text-sm font-semibold text-white transition hover:bg-hover active:scale-[0.98]"
+              >
+                Scan Ulang QR Code
+              </button>
+              <button
+                onClick={() => router.replace("/")}
+                className="w-full rounded-2xl border border-neutral-200 dark:border-neutral-800 py-4 text-sm font-semibold text-neutral-600 dark:text-neutral-400 transition hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                Kembali ke Beranda
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -252,13 +306,9 @@ export default function Result() {
     <PageTransition>
       <Suspense
         fallback={
-          <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 p-5 bg-neutral-50 dark:bg-neutral-950">
-            <Card>
-              <div className="flex flex-col items-center justify-center p-10 space-y-4">
-                <div className="size-10 animate-spin rounded-full border-4 border-neutral-200 border-t-blue-600 dark:border-neutral-700 dark:border-t-blue-500" />
-                <p className="text-sm font-medium text-neutral-500">Menyiapkan halaman...</p>
-              </div>
-            </Card>
+          <div className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 bg-[#F2F2F7] dark:bg-neutral-950">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-neutral-400">Menyiapkan halaman...</p>
           </div>
         }
       >
