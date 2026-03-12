@@ -4,8 +4,9 @@ import { useRouter } from "next/navigation";
 import { setItem, getItem, keys } from "@/src/lib/storage";
 import {
   QrCode, BadgeCheck, BookOpen, CalendarDays,
-  Activity, ChevronRight, Wifi,
-} from "lucide-react";
+  Activity, ChevronRight, Wifi, Map as MapIcon
+} 
+from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Home() {
@@ -188,6 +189,32 @@ export default function Home() {
               </div>
             </button>
           </div>
+
+          {/* ── GPS TRACKER ACTION ── */}
+<button
+  onClick={() => router.push("/gps")}
+  disabled={!isReady}
+  className={[
+    "w-full flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-900 px-5 py-4 text-left mt-3",
+    "shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all duration-200",
+    !isReady
+      ? "opacity-50 cursor-not-allowed"
+      : "hover:ring-neutral-300 dark:hover:ring-neutral-600 active:scale-[0.98]",
+  ].join(" ")}
+>
+  <div className="flex items-center gap-4">
+    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/40">
+      <MapIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    </div>
+    <div>
+      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">
+        GPS & Tracking
+      </p>
+      <p className="text-xs text-neutral-400 mt-0.5">Pantau lokasi dan riwayat peta</p>
+    </div>
+  </div>
+  <ChevronRight className={`h-5 w-5 shrink-0 ${isReady ? "opacity-30" : "opacity-10"}`} />
+</button>
 
           {/* ── HINT TEXT (visible only when not ready) ── */}
           {!isReady && (
