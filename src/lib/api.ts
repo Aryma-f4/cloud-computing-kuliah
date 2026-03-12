@@ -45,7 +45,7 @@ export async function getStatus(query: StatusQuery): Promise<StatusResponse> {
 export async function postAccel(payload: PostAccelRequest): Promise<PostAccelResponse> {
   return requestJson(`${BASE_URL}?path=telemetry/accel`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload),
   });
 }
@@ -60,7 +60,7 @@ export async function getAccelLatest(device_id: string): Promise<GetAccelLatestR
 export async function postGps(payload: PostGpsRequest): Promise<PostGpsResponse> {
   return requestJson(`${BASE_URL}?path=telemetry/gps`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload),
   });
 }
