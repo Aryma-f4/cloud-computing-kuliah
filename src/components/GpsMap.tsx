@@ -1,38 +1,40 @@
 "use client";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect } from "react";
 
-// Fix icon default Leaflet yang sering error di Next.js
-const icon = L.icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Fix icon default leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl      : "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl    : "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Komponen untuk update center peta otomatis jika lokasi berubah
-function RecenterMap({ coords }: { coords: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(coords);
-  }, [coords, map]);
-  return null;
+interface Props {
+  latest : [number, number];
+  history: [number, number][];
 }
 
-export default function GpsMap({ latest, history }: { latest: [number, number], history: [number, number][] }) {
+export default function GpsMap({ latest, history }: Props) {
   return (
     <MapContainer
       center={latest}
       zoom={16}
-      className="h-full w-full z-0"
-      zoomControl={false}
+      style={{ height: "100%", width: "100%" }}
     >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <Polyline positions={history} color="#3b82f6" weight={4} opacity={0.7} dashArray="5, 10" />
-      <Marker position={latest} icon={icon} />
-      <RecenterMap coords={latest} />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap contributors'
+      />
+      {/* Polyline jejak perjalanan */}
+      {history.length > 1 && (
+        <Polyline positions={history} color="#3b82f6" weight={3} opacity={0.7} />
+      )}
+      {/* Marker posisi terbaru */}
+      <Marker position={latest}>
+        <Popup>Posisi Terbaru</Popup>
+      </Marker>
     </MapContainer>
   );
 }
