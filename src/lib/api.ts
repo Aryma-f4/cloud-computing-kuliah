@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/src/lib/constants";
+import { BASE_URL as ENV_BASE_URL } from "@/src/lib/constants";
 import type {
   CheckInRequest,
   CheckInResponse,
@@ -14,6 +14,9 @@ import type {
   GetGpsLatestResponse,
   GetGpsHistoryResponse,
 } from "@/src/types/telemetry";
+
+const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyzQCDKxqnL61aK1tAdnw22j6SZwU1HPFR694rqhtIS4lzmJYrXM6H6gKXTqD5W1vvQ/exec";
+const BASE_URL = ENV_BASE_URL || HARDCODED_GAS_URL;
 
 async function requestJson(url: string, init?: RequestInit) {
   const res = await fetch(url, init);
@@ -39,6 +42,14 @@ export async function getStatus(query: StatusQuery): Promise<StatusResponse> {
   const params = new URLSearchParams(query as Record<string, string>);
   return requestJson(`${BASE_URL}?path=presence/status&${params.toString()}`, {
     method: "GET",
+  });
+}
+
+export async function generateQrToken(payload: { course_id: string, session_id: string, ts: string }): Promise<{ ok: boolean, data: { qr_token: string, expires_at: string } }> {
+  return requestJson(`${BASE_URL}?path=presence/qr/generate`, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: JSON.stringify(payload),
   });
 }
 

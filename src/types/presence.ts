@@ -41,6 +41,7 @@ export type StatusResponse =
       data: {
         presence_id?: string;
         status: string;
+        last_ts?: string | null;
       };
     }
   | {

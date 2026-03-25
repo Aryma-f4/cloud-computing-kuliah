@@ -219,7 +219,9 @@ function getStatus(params) {
     if (presences[i][1] === user_id && presences[i][3] === course_id && presences[i][4] === session_id) {
       return jsonResponse(true, null, {
         user_id: user_id, course_id: course_id, session_id: session_id,
-        status: presences[i][5], last_ts: presences[i][6]
+        presence_id: presences[i][0],
+        status: presences[i][5], 
+        last_ts: presences[i][6]
       });
     }
   }

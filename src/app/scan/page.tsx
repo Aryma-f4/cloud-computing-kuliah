@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { QrScanner } from "@/src/components/QrScanner";
 import { getItem, keys } from "@/src/lib/storage";
 import { ChevronLeft, ScanLine, BadgeCheck } from "lucide-react";
+import { Button } from "@/src/components/ui/Button";
 import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Scan() {
@@ -32,23 +33,25 @@ export default function Scan() {
         </div>
 
         {/* ── TOP VIGNETTE ── */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-gradient-to-b from-black/75 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-gradient-to-b from-neutral-950/80 to-transparent" />
 
         {/* ── BOTTOM VIGNETTE ── */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-black/85 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-neutral-950/90 to-transparent" />
 
         {/* ── UI LAYER ── */}
         <div className="relative z-20 flex h-full flex-col">
 
           {/* TOP BAR */}
           <div className="flex items-center justify-between px-5 pt-14">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => router.back()}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50 active:scale-95"
+              className="rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50"
               aria-label="Kembali"
             >
               <ChevronLeft className="h-5 w-5" />
-            </button>
+            </Button>
 
             <div className="text-center">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-white/50">
@@ -85,7 +88,7 @@ export default function Scan() {
             <div className="relative h-60 w-60">
               {/* animated scan line */}
               <div
-                className="absolute inset-x-3 h-0.5 rounded-full bg-primary shadow-[0_0_8px_2px_rgba(46,139,220,0.6)]"
+                className="absolute inset-x-3 h-0.5 rounded-full bg-primary shadow-[0_0_8px_2px_var(--color-primary)] opacity-60"
                 style={{ animation: "scanline 2.2s ease-in-out infinite" }}
               />
               <style>{`
@@ -98,10 +101,10 @@ export default function Scan() {
               `}</style>
 
               {/* Corner brackets */}
-              <div className="absolute left-0  top-0    h-9 w-9 rounded-tl-xl border-l-[3px] border-t-[3px] border-white" />
-              <div className="absolute right-0 top-0    h-9 w-9 rounded-tr-xl border-r-[3px] border-t-[3px] border-white" />
-              <div className="absolute left-0  bottom-0 h-9 w-9 rounded-bl-xl border-b-[3px] border-l-[3px] border-white" />
-              <div className="absolute right-0 bottom-0 h-9 w-9 rounded-br-xl border-b-[3px] border-r-[3px] border-white" />
+              <div className="absolute left-0  top-0    h-9 w-9 rounded-tl-xl border-l-[3px] border-t-[3px] border-primary" />
+              <div className="absolute right-0 top-0    h-9 w-9 rounded-tr-xl border-r-[3px] border-t-[3px] border-primary" />
+              <div className="absolute left-0  bottom-0 h-9 w-9 rounded-bl-xl border-b-[3px] border-l-[3px] border-primary" />
+              <div className="absolute right-0 bottom-0 h-9 w-9 rounded-br-xl border-b-[3px] border-r-[3px] border-primary" />
 
               {/* Center hint chip */}
               <div className="absolute inset-x-0 bottom-3 flex justify-center">
@@ -119,20 +122,21 @@ export default function Scan() {
               Pastikan QR terlihat jelas dan pencahayaan cukup
             </p>
             <div className="grid grid-cols-2 gap-3">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => router.replace("/status")}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-white/15 py-3.5 text-sm font-semibold text-white backdrop-blur-sm ring-1 ring-white/10 transition hover:bg-white/25 active:scale-[0.97]"
+                className="rounded-2xl bg-white/15 py-3.5 text-sm font-semibold text-white backdrop-blur-sm ring-1 ring-white/10 transition hover:bg-white/25"
               >
-                <BadgeCheck className="h-4 w-4" />
+                <BadgeCheck className="h-4 w-4 mr-2" />
                 Cek Status
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={() => router.back()}
-                className="flex items-center justify-center rounded-2xl bg-white py-3.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100 active:scale-[0.97]"
+                className="rounded-2xl bg-white py-3.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-100"
               >
                 Batal
-              </button>
+              </Button>
             </div>
           </div>
         </div>

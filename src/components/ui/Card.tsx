@@ -1,8 +1,14 @@
-import type { PropsWithChildren } from "react";
+import type { ReactNode } from "react";
 
-export function Card({ children }: PropsWithChildren) {
+type CardProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+export function Card({ children, className = "" }: CardProps) {
+  const baseClass = "rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900";
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <div className={`${baseClass} ${className}`}>
       {children}
     </div>
   );
