@@ -1,17 +1,17 @@
-// src/services/gpsService.ts
+// src/lib/gpsService.ts
 // ============================================================
-//  GPS Telemetry Service - FIXED
+// GPS Telemetry Service - JALUR PAKSA (Bypass .env Vercel)
 // ============================================================
 
-const BASE_URL = process.env.NEXT_PUBLIC_GPS_GAS_URL;
+/** * URL GAS milikmu. 
+ */ 
+const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyzQCDKxqnL61aK1tAdnw22j6SZwU1HPFR694rqhtIS4lzmJYrXM6H6gKXTqD5W1vvQ/exec";
 
-/** Tambah ?path= ke BASE_URL dengan validasi */
+// Gunakan variabel lingkungan jika ada, jika tidak pakai yang di atas
+const BASE_URL = process.env.NEXT_PUBLIC_GPS_GAS_URL || HARDCODED_GAS_URL;
+
 function endpoint(path: string, params?: Record<string, string>) {
-  if (!BASE_URL) {
-    // Memberikan pesan error yang lebih jelas daripada "Invalid URL"
-    throw new Error("Konfigurasi API (NEXT_PUBLIC_GPS_GAS_URL) belum diatur di file .env");
-  }
-
+  if (!BASE_URL) return "";
   try {
     const url = new URL(BASE_URL);
     url.searchParams.set("path", path);
@@ -20,19 +20,20 @@ function endpoint(path: string, params?: Record<string, string>) {
     }
     return url.toString();
   } catch (e) {
-    throw new Error("Format URL di .env tidak valid. Pastikan diawali dengan https://");
+    return "";
   }
 }
 
-/** GAS butuh Content-Type: text/plain agar tidak trigger CORS preflight */
 async function gasPost<T>(path: string, body: object): Promise<T> {
   const url = endpoint(path);
+  if (!url) throw new Error("URL API tidak valid.");
+
   const res = await fetch(url, {
     method : "POST",
     headers: { "Content-Type": "text/plain" },
     body   : JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "GAS error");
   return json;
@@ -40,14 +41,14 @@ async function gasPost<T>(path: string, body: object): Promise<T> {
 
 async function gasGet<T>(path: string, params?: Record<string, string>): Promise<T> {
   const url = endpoint(path, params);
+  if (!url) throw new Error("URL API tidak valid.");
+
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "GAS error");
   return json;
 }
 
-// ── Types & API Functions tetap sama ──
 export interface GpsPoint {
   ts         : string;
   lat        : number;
@@ -59,33 +60,34 @@ export interface LogGpsPayload extends GpsPoint {
   device_id: string;
 }
 
-export async function logGps(payload: LogGpsPayload): Promise<void> {
-  await gasPost("telemetry/gps", payload);
-}
+export const logGps = (payload: LogGpsPayload) => gasPost("telemetry/gps", payload);
 
 export async function getLatest(deviceId: string): Promise<GpsPoint | null> {
-  const res = await gasGet<{ok: boolean, data: GpsPoint | null}>("telemetry/gps/latest", { device_id: deviceId });
-  return res.data;
+  try {
+    const res = await gasGet<any>("telemetry/gps/latest", { device_id: deviceId });
+    return res.data;
+  } catch (e) {
+    return null;
+  }
 }
 
 export async function getHistory(deviceId: string, limit = 200): Promise<GpsPoint[]> {
-  const res = await gasGet<{ok: boolean, data: {items: GpsPoint[]}}>("telemetry/gps/history", {
-    device_id: deviceId,
-    limit    : String(limit),
-  });
-  return res.data?.items ?? [];
+  try {
+    const res = await gasGet<any>("telemetry/gps/history", { device_id: deviceId, limit: String(limit) });
+    return res.data?.items ?? [];
+  } catch (e) {
+    return [];
+  }
 }
 
 export function readBrowserGps(): Promise<GeolocationCoordinates> {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Browser tidak mendukung Geolocation"));
-      return;
-    }
+    if (!navigator.geolocation) return reject(new Error("GPS tidak didukung"));
+    
     navigator.geolocation.getCurrentPosition(
       pos => resolve(pos.coords),
       err => reject(err),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   });
 }
