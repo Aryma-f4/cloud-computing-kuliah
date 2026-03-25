@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { User, Fingerprint, ArrowRight } from "lucide-react";
+import { User, Fingerprint } from "lucide-react";
 
 import { getItem, setItem, keys } from "@/src/lib/storage";
 import { generateDeviceIdSync } from "@/src/lib/fingerprint";
@@ -39,9 +39,9 @@ export default function LoginPage() {
   return (
     <PageTransition>
     <section className="flex min-h-dvh items-center justify-center bg-[#f7f7f7] p-0 sm:p-6">
-      <div className="relative h-dvh w-full max-w-[393px] overflow-hidden bg-white sm:h-[852px] sm:rounded-[28px] sm:shadow-xl">
+      <div className="relative h-dvh w-full max-w-98.25 overflow-hidden bg-white sm:h-213 sm:rounded-[28px] sm:shadow-xl">
         {/* Top decorative area */}
-        <div className="relative h-[320px] overflow-hidden bg-primary">
+        <div className="relative h-80 overflow-hidden bg-primary">
           <div
             className="absolute inset-0 opacity-25"
             style={{
@@ -90,7 +90,7 @@ export default function LoginPage() {
 
           <div className="absolute inset-x-0 bottom-0 h-20 rounded-t-[48px] bg-white" />
 
-          <div className="absolute left-6 top-16 z-10 max-w-[260px]">
+          <div className="absolute left-6 top-16 z-10 max-w-65">
             <p className="text-sm font-medium text-white/90">Laman Presensi</p>
             <h1 className="mt-2 text-4xl font-bold leading-tight text-white">
               E-Absen
@@ -103,7 +103,7 @@ export default function LoginPage() {
         </div>
 
         {/* Content */}
-        <div className="-mt-2 rounded-t-[32px] bg-white px-6 pb-8 pt-2">
+        <div className="-mt-2 rounded-t-4xl bg-white px-6 pb-8 pt-2">
           <form onSubmit={handleSave} className="space-y-5">
             <div className="space-y-2">
               <label
