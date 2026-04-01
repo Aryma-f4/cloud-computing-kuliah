@@ -25,6 +25,7 @@ export type GetAccelLatestResponse = {
 
 export type PostGpsRequest = {
   device_id: string;
+  user_id: string;
   ts: string;
   lat: number;
   lng: number;
@@ -45,6 +46,10 @@ export type GetGpsLatestResponse = {
 
 export type GetGpsHistoryResponse = {
   ok: boolean;
-  data?: { device_id: string; items: Array<{ ts: string; lat: number; lng: number }> };
+  data?: { 
+    device_id: string; 
+    user_id: string;
+    items: Array<{ ts: string; lat: number; lng: number }> 
+  };
   error?: string;
 };

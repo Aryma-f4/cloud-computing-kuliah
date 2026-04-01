@@ -205,7 +205,9 @@ function checkIn(body) {
 }
 
 function getStatus(params) {
-  const { user_id, course_id, session_id } = params;
+  const user_id    = (params.user_id || "").trim();
+  const course_id  = (params.course_id || "").trim();
+  const session_id = (params.session_id || "").trim();
 
   if (!user_id)    return jsonResponse(false, "missing_field: user_id");
   if (!course_id)  return jsonResponse(false, "missing_field: course_id");
@@ -216,12 +218,17 @@ function getStatus(params) {
 
   const presences = presenceSheet.getDataRange().getValues();
   for (let i = 1; i < presences.length; i++) {
-    if (presences[i][1] === user_id && presences[i][3] === course_id && presences[i][4] === session_id) {
+    const row = presences[i];
+    // headers: presence_id[0], user_id[1], device_id[2], course_id[3], session_id[4], status[5], ts[6]
+    if (String(row[1]).trim() === user_id && 
+        String(row[3]).trim() === course_id && 
+        String(row[4]).trim() === session_id) {
+      
       return jsonResponse(true, null, {
         user_id: user_id, course_id: course_id, session_id: session_id,
-        presence_id: presences[i][0],
-        status: presences[i][5], 
-        last_ts: presences[i][6]
+        presence_id: row[0],
+        status: row[5], 
+        last_ts: row[6]
       });
     }
   }
@@ -341,16 +348,21 @@ function telemetryAccelLatest(params) {
 function telemetryGpsPost(body) {
   try {
     const device_id = (body.device_id || "").trim();
+    const user_id   = (body.user_id || "").trim();
     const ts = (body.ts || "").trim();
     var lat = Number(body.lat);
     var lng = Number(body.lng);
     var acc = Number(body.accuracy_m);
+    
     if (!device_id) return jsonResponse(false, "missing_field: device_id");
-    if (!ts) return jsonResponse(false, "missing_field: ts");
+    if (!user_id)   return jsonResponse(false, "missing_field: user_id");
+    if (!ts)        return jsonResponse(false, "missing_field: ts");
     if (isNaN(lat) || isNaN(lng)) return jsonResponse(false, "missing_field: lat_lng");
     if (isNaN(acc)) acc = null;
-    const sh = getOrCreateSheet_("telemetry_gps", ["device_id", "ts", "lat", "lng", "accuracy_m"]);
-    sh.appendRow([device_id, ts, lat, lng, acc]);
+
+    const sh = getOrCreateSheet_("telemetry_gps", ["device_id", "user_id", "ts", "lat", "lng", "accuracy_m"]);
+    sh.appendRow([device_id, user_id, ts, lat, lng, acc]);
+    
     return jsonResponse(true, null, { accepted: true });
   } catch (err) {
     return jsonResponse(false, "server_error: " + err.message);
@@ -360,18 +372,24 @@ function telemetryGpsPost(body) {
 function telemetryGpsLatest(params) {
   try {
     const device_id = (params.device_id || "").trim();
+    const user_id   = (params.user_id || "").trim();
+    
     if (!device_id) return jsonResponse(false, "missing_field: device_id");
+    if (!user_id)   return jsonResponse(false, "missing_field: user_id");
+    
     const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("telemetry_gps");
     if (!sh) return jsonResponse(false, "sheet_not_found: telemetry_gps");
+    
     const rows = sh.getDataRange().getValues();
-    // headers: device_id, ts, lat, lng, accuracy_m
+    // headers: device_id[0], user_id[1], ts[2], lat[3], lng[4], accuracy_m[5]
     for (var i = rows.length - 1; i >= 1; i--) {
-      if (String(rows[i][0]).trim() === device_id) {
+      const row = rows[i];
+      if (String(row[0]).trim() === device_id && String(row[1]).trim() === user_id) {
         return jsonResponse(true, null, {
-          ts: rows[i][1],
-          lat: rows[i][2],
-          lng: rows[i][3],
-          accuracy_m: rows[i][4]
+          ts: row[2],
+          lat: Number(row[3]),
+          lng: Number(row[4]),
+          accuracy_m: Number(row[5])
         });
       }
     }
@@ -384,23 +402,34 @@ function telemetryGpsLatest(params) {
 function telemetryGpsHistory(params) {
   try {
     const device_id = (params.device_id || "").trim();
+    const user_id   = (params.user_id || "").trim();
     var limit = Number(params.limit);
+
     if (!device_id) return jsonResponse(false, "missing_field: device_id");
+    if (!user_id)   return jsonResponse(false, "missing_field: user_id");
     if (isNaN(limit) || limit <= 0) limit = 100;
+
     const sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("telemetry_gps");
     if (!sh) return jsonResponse(false, "sheet_not_found: telemetry_gps");
+    
     const rows = sh.getDataRange().getValues();
     var items = [];
-    // headers: device_id, ts, lat, lng, accuracy_m
+    // headers: device_id[0], user_id[1], ts[2], lat[3], lng[4], accuracy_m[5]
     for (var i = 1; i < rows.length; i++) {
-      if (String(rows[i][0]).trim() === device_id) {
-        items.push({ ts: rows[i][1], lat: rows[i][2], lng: rows[i][3] });
+      const row = rows[i];
+      if (String(row[0]).trim() === device_id && String(row[1]).trim() === user_id) {
+        items.push({ 
+          ts: row[2], 
+          lat: Number(row[3]), 
+          lng: Number(row[4]),
+          accuracy_m: Number(row[5])
+        });
       }
     }
     if (items.length > limit) {
       items = items.slice(items.length - limit);
     }
-    return jsonResponse(true, null, { device_id: device_id, items: items });
+    return jsonResponse(true, null, { device_id: device_id, user_id: user_id, items: items });
   } catch (err) {
     return jsonResponse(false, "server_error: " + err.message);
   }

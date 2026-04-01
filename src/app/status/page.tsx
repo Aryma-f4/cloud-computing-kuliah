@@ -12,8 +12,10 @@ import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Status() {
   const router = useRouter();
-  const [courseId, setCourseId] = useState(() => getItem(keys.last_course_id) ?? "");
-  const [sessionId, setSessionId] = useState(() => getItem(keys.last_session_id) ?? "");
+  const [courseId, setCourseId] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [resp, setResp] = useState<StatusResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -30,11 +32,11 @@ export default function Status() {
   }, []);
 
   const check = useCallback(async () => {
-    const user_id = getItem(keys.user_id);
-    if (!user_id || !courseId || !sessionId) return;
+    const u = getItem(keys.user_id);
+    if (!u || !courseId || !sessionId) return;
     setLoading(true);
     try {
-      const r = await getStatus({ user_id, course_id: courseId.trim(), session_id: sessionId.trim() });
+      const r = await getStatus({ user_id: u, course_id: courseId.trim(), session_id: sessionId.trim() });
       setResp(r);
     } catch (err) {
       console.error("Failed to fetch status:", err);
@@ -45,16 +47,27 @@ export default function Status() {
 
   useEffect(() => {
     const u = getItem(keys.user_id);
+    const c = getItem(keys.last_course_id) ?? "";
+    const s = getItem(keys.last_session_id) ?? "";
+    
+    const frameId = requestAnimationFrame(() => {
+      setUserId(u);
+      setCourseId(c);
+      setSessionId(s);
+      setIsLoaded(true);
+      if (u && c && s) {
+        check();
+      }
+    });
+
     if (!u) {
       router.replace("/login");
-    } else if (courseId && sessionId) {
-      const timer = setTimeout(() => {
-        check();
-      }, 500);
-      return () => clearTimeout(timer);
     }
-    return undefined;
-  }, [router, courseId, sessionId, check]);
+
+    return () => cancelAnimationFrame(frameId);
+  }, [router, check]);
+
+  if (!isLoaded) return null;
 
   return (
     <PageTransition>

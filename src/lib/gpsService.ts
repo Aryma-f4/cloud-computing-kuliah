@@ -3,7 +3,7 @@
 // GPS Telemetry Service - JALUR PAKSA (Bypass .env Vercel)
 // ============================================================
 
-const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyzQCDKxqnL61aK1tAdnw22j6SZwU1HPFR694rqhtIS4lzmJYrXM6H6gKXTqD5W1vvQ/exec";
+const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyIhTyCOmVcCoq4ooTBqh1xpLwD4j5paaU1yzqjyPPEwa6X70Ho5J8Ykkf9ZoO1Of5H/exec";
 const BASE_URL = process.env.NEXT_PUBLIC_GPS_GAS_URL || HARDCODED_GAS_URL;
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -65,12 +65,14 @@ export interface GpsPoint {
 
 export interface LogGpsPayload extends GpsPoint {
   device_id: string;
+  user_id  : string;
 }
 
 export interface HistoryResponse {
   ok  : boolean;
   data: {
     device_id: string;
+    user_id  : string;
     items    : GpsPoint[];
   };
 }
@@ -91,32 +93,33 @@ export async function logGps(payload: LogGpsPayload): Promise<void> {
 }
 
 /**
- * GET /telemetry/gps/latest?device_id=...
+ * GET /telemetry/gps/latest?device_id=...&user_id=...
  * Posisi terbaru — dipakai untuk Marker di peta.
  */
-export async function getLatest(deviceId: string): Promise<GpsPoint | null> {
+export async function getLatest(deviceId: string, userId: string): Promise<GpsPoint | null> {
   try {
-    const res = await gasGet<LatestResponse>("telemetry/gps/latest", { device_id: deviceId });
+    const res = await gasGet<LatestResponse>("telemetry/gps/latest", { device_id: deviceId, user_id: userId });
     return res.data;
-  } catch (e) {
-    console.warn("Gagal get latest:", e);
+  } catch (err) {
+    console.error("getLatest failed:", err);
     return null;
   }
 }
 
 /**
- * GET /telemetry/gps/history?device_id=...&limit=...
- * Daftar titik — dipakai untuk Polyline di peta.
+ * GET /telemetry/gps/history?device_id=...&user_id=...&limit=...
+ * Riwayat posisi — dipakai untuk Polyline di peta.
  */
-export async function getHistory(deviceId: string, limit = 200): Promise<GpsPoint[]> {
+export async function getHistory(deviceId: string, userId: string, limit = 100): Promise<GpsPoint[]> {
   try {
-    const res = await gasGet<HistoryResponse>("telemetry/gps/history", {
-      device_id: deviceId,
-      limit    : String(limit),
+    const res = await gasGet<HistoryResponse>("telemetry/gps/history", { 
+      device_id: deviceId, 
+      user_id: userId,
+      limit: String(limit) 
     });
-    return res.data?.items ?? [];
-  } catch (e) {
-    console.warn("Gagal get history:", e);
+    return res.data?.items || [];
+  } catch (err) {
+    console.error("getHistory failed:", err);
     return [];
   }
 }

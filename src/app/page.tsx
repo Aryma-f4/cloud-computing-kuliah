@@ -11,14 +11,30 @@ import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Home() {
   const router = useRouter();
-  const [courseId, setCourseId] = useState(() => getItem(keys.last_course_id) ?? "");
-  const [sessionId, setSessionId] = useState(() => getItem(keys.last_session_id) ?? "");
-  const [userId] = useState<string | null>(() => getItem(keys.user_id));
+  const [courseId, setCourseId] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const isReady = !!(courseId && sessionId);
 
   useEffect(() => {
-    if (!userId) router.replace("/login");
-  }, [router, userId]);
+    const u = getItem(keys.user_id);
+    const c = getItem(keys.last_course_id) ?? "";
+    const s = getItem(keys.last_session_id) ?? "";
+    
+    // Memindahkan update state ke frame berikutnya untuk menghindari warning ESLint
+    // dan memastikan render client-side yang stabil
+    const frameId = requestAnimationFrame(() => {
+      setUserId(u);
+      setCourseId(c);
+      setSessionId(s);
+      setIsLoaded(true);
+    });
+
+    if (!u) router.replace("/login");
+
+    return () => cancelAnimationFrame(frameId);
+  }, [router]);
 
   function onChangeCourse(e: React.ChangeEvent<HTMLInputElement>) {
     const v = e.target.value.trim();
@@ -30,6 +46,8 @@ export default function Home() {
     setSessionId(v);
     setItem(keys.last_session_id, v);
   }
+
+  if (!isLoaded) return null; // Prevent hydration mismatch by waiting for client-side load
 
   return (
     <PageTransition>

@@ -15,7 +15,7 @@ import type {
   GetGpsHistoryResponse,
 } from "@/src/types/telemetry";
 
-const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyzQCDKxqnL61aK1tAdnw22j6SZwU1HPFR694rqhtIS4lzmJYrXM6H6gKXTqD5W1vvQ/exec";
+const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyIhTyCOmVcCoq4ooTBqh1xpLwD4j5paaU1yzqjyPPEwa6X70Ho5J8Ykkf9ZoO1Of5H/exec";
 const BASE_URL = ENV_BASE_URL || HARDCODED_GAS_URL;
 
 async function requestJson(url: string, init?: RequestInit) {
@@ -76,15 +76,15 @@ export async function postGps(payload: PostGpsRequest): Promise<PostGpsResponse>
   });
 }
 
-export async function getGpsLatest(device_id: string): Promise<GetGpsLatestResponse> {
-  const params = new URLSearchParams({ device_id });
+export async function getGpsLatest(device_id: string, user_id: string): Promise<GetGpsLatestResponse> {
+  const params = new URLSearchParams({ device_id, user_id });
   return requestJson(`${BASE_URL}?path=telemetry/gps/latest&${params.toString()}`, {
     method: "GET",
   });
 }
 
-export async function getGpsHistory(device_id: string, limit = 100): Promise<GetGpsHistoryResponse> {
-  const params = new URLSearchParams({ device_id, limit: String(limit) });
+export async function getGpsHistory(device_id: string, user_id: string, limit = 100): Promise<GetGpsHistoryResponse> {
+  const params = new URLSearchParams({ device_id, user_id, limit: String(limit) });
   return requestJson(`${BASE_URL}?path=telemetry/gps/history&${params.toString()}`, {
     method: "GET",
   });

@@ -35,7 +35,9 @@ export default function GpsPage() {
   const [isOnline,  setIsOnline]  = useState(true);
   const [isTracking, setIsTracking] = useState(false);
   const [deviceId,   setDeviceId]   = useState<string>("");
+  const [userId,     setUserId]     = useState<string>("");
   const [now,        setNow]        = useState(new Date());
+  const [isLoaded,   setIsLoaded]   = useState(false);
 
   const pollRef   = useRef<ReturnType<typeof setInterval> | null>(null);
   const statusRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -60,12 +62,12 @@ export default function GpsPage() {
     }
   }, []);
 
-  const loadMapData = useCallback(async (id: string) => {
-    if (!id) return;
+  const loadMapData = useCallback(async (d: string, u: string) => {
+    if (!d || !u) return;
     try {
       const [latest, items] = await Promise.all([
-        getLatest(id),
-        getHistory(id, HISTORY_LIMIT),
+        getLatest(d, u),
+        getHistory(d, u, HISTORY_LIMIT),
       ]);
 
       if (latest && latest.lat !== 0 && latest.lat !== null) {
@@ -87,9 +89,10 @@ export default function GpsPage() {
   const sendOnce = useCallback(async (isAuto = false) => {
     if (isProcessingRef.current) return;
     
-    const id = getItem(keys.device_id);
-    if (!id) {
-      showStatus("error", "Device ID tidak ditemukan");
+    const d = getItem(keys.device_id);
+    const u = getItem(keys.user_id);
+    if (!d || !u) {
+      showStatus("error", "Data login tidak ditemukan");
       return;
     }
 
@@ -104,7 +107,8 @@ export default function GpsPage() {
     try {
       const coords = await readBrowserGps();
       const payload = {
-        device_id: id,
+        device_id: d,
+        user_id: u,
         ts: new Date().toISOString(),
         lat: coords.latitude,
         lng: coords.longitude,
@@ -160,21 +164,28 @@ export default function GpsPage() {
       router.replace("/login");
       return;
     }
-    setDeviceId(d);
+
+    const frameId = requestAnimationFrame(() => {
+      setDeviceId(d);
+      setUserId(u);
+      setIsLoaded(true);
+      void loadMapData(d, u);
+    });
 
     const on = () => setIsOnline(true);
     const off = () => setIsOnline(false);
     window.addEventListener("online", on);
     window.addEventListener("offline", off);
     
-    void loadMapData(d);
-
     return () => {
       window.removeEventListener("online", on);
       window.removeEventListener("offline", off);
+      cancelAnimationFrame(frameId);
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [router, loadMapData]);
+
+  if (!isLoaded) return null;
 
   // --- UI Logic ---
   const displayPos = marker ?? [-7.2504, 112.7688];
@@ -279,7 +290,7 @@ export default function GpsPage() {
             </button> 
 
             <button 
-              onClick={() => void loadMapData(deviceId)} 
+              onClick={() => void loadMapData(deviceId, userId)} 
               className="w-full flex items-center justify-center gap-3 rounded-2xl bg-neutral-200 dark:bg-neutral-800 px-5 py-4 text-neutral-700 dark:text-neutral-300 active:scale-[0.98]" 
             > 
               <History className="h-4 w-4" /> 
