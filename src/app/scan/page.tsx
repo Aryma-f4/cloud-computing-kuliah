@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrScanner } from "@/src/components/QrScanner";
 import { getItem, keys } from "@/src/lib/storage";
-import { ChevronLeft, ScanLine, BadgeCheck } from "lucide-react";
+import { ChevronLeft, ScanLine, BadgeCheck, RotateCcw } from "lucide-react";
 import { Button } from "@/src/components/ui/Button";
 import { PageTransition } from "@/src/components/PageTransition";
 
 export default function Scan() {
   const router = useRouter();
+  const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
 
   const userId    = useMemo(() => getItem(keys.user_id), []);
   const courseId  = useMemo(() => getItem(keys.last_course_id), []);
@@ -26,6 +27,7 @@ export default function Scan() {
         {/* ── CAMERA: fills the full screen ── */}
         <div className="absolute inset-0 z-0">
           <QrScanner
+            facingMode={facingMode}
             onToken={(token) =>
               router.replace(`/result?token=${encodeURIComponent(token)}`)
             }
@@ -60,9 +62,22 @@ export default function Scan() {
               <p className="text-sm font-bold text-white">Scan QR Code</p>
             </div>
 
-            <div className="flex h-8 items-center gap-1 rounded-full bg-black/30 px-3 text-[11px] font-medium text-white backdrop-blur-sm">
-              <BadgeCheck className="h-3.5 w-3.5 text-green-400" />
-              Aman
+            <div className="flex items-center gap-2">
+              {/* Switch Camera Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setFacingMode(prev => prev === "environment" ? "user" : "environment")}
+                className="rounded-full bg-black/30 text-white backdrop-blur-sm transition hover:bg-black/50 ring-1 ring-white/10"
+                title="Ganti Kamera"
+              >
+                <RotateCcw className="h-4.5 w-4.5" />
+              </Button>
+
+              <div className="flex h-8 items-center gap-1 rounded-full bg-black/30 px-3 text-[11px] font-medium text-white backdrop-blur-sm ring-1 ring-white/5">
+                <BadgeCheck className="h-3.5 w-3.5 text-green-400" />
+                <span className="hidden xs:inline">Aman</span>
+              </div>
             </div>
           </div>
 
