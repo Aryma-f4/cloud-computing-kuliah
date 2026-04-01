@@ -4,6 +4,7 @@ import type {
   CheckInResponse,
   StatusQuery,
   StatusResponse,
+  PresenceHistoryResponse,
 } from "@/src/types/presence";
 import type {
   PostAccelRequest,
@@ -41,6 +42,16 @@ export async function checkIn(payload: CheckInRequest): Promise<CheckInResponse>
 export async function getStatus(query: StatusQuery): Promise<StatusResponse> {
   const params = new URLSearchParams(query as Record<string, string>);
   return requestJson(`${BASE_URL}?path=presence/status&${params.toString()}`, {
+    method: "GET",
+  });
+}
+
+export async function getPresenceHistory(params: { user_id: string, course_id?: string, session_id?: string, limit?: number }): Promise<PresenceHistoryResponse> {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) query.append(key, String(value));
+  });
+  return requestJson(`${BASE_URL}?path=presence/history&${query.toString()}`, {
     method: "GET",
   });
 }

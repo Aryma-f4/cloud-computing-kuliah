@@ -140,7 +140,13 @@ function generateQR(body) {
 }
 
 function checkIn(body) {
-  const { user_id, device_id, course_id, session_id, qr_token, ts } = body;
+  const user_id    = String(body.user_id || "").trim();
+  const device_id  = String(body.device_id || "").trim();
+  const course_id  = String(body.course_id || "").trim();
+  const session_id = String(body.session_id || "").trim();
+  const qr_token   = String(body.qr_token || "").trim();
+  const ts         = String(body.ts || "").trim();
+  
   const loc_lat  = body.loc_lat || null;
   const loc_lng  = body.loc_lng || null;
   const loc_acc  = body.loc_acc || null;
@@ -167,18 +173,23 @@ function checkIn(body) {
   let validToken = null;
 
   for (let i = 1; i < tokens.length; i++) {
-    if (tokens[i][0] === course_id && tokens[i][1] === session_id && tokens[i][2] === qr_token) {
+    if (String(tokens[i][0]).trim() === course_id && 
+        String(tokens[i][1]).trim() === session_id && 
+        String(tokens[i][2]).trim() === qr_token) {
       validToken = tokens[i];
       break;
     }
   }
 
-  if (!validToken)                              return jsonResponse(false, "token_invalid");
+  if (!validToken)                             return jsonResponse(false, "token_invalid");
   if (new Date(ts) > new Date(validToken[3]))  return jsonResponse(false, "token_expired");
 
   const presences = presenceSheet.getDataRange().getValues();
   for (let i = 1; i < presences.length; i++) {
-    if (presences[i][1] === user_id && presences[i][3] === course_id && presences[i][4] === session_id) {
+    // presence_id[0], user_id[1], device_id[2], course_id[3], session_id[4]
+    if (String(presences[i][1]).trim() === user_id && 
+        String(presences[i][3]).trim() === course_id && 
+        String(presences[i][4]).trim() === session_id) {
       return jsonResponse(false, "already_checked_in");
     }
   }
@@ -205,73 +216,104 @@ function checkIn(body) {
 }
 
 function getStatus(params) {
-  const user_id    = (params.user_id || "").trim();
-  const course_id  = (params.course_id || "").trim();
-  const session_id = (params.session_id || "").trim();
+  // Normalisasi input (trim & lowercase)
+  const user_id    = String(params.user_id || "").toLowerCase().trim();
+  const course_id  = String(params.course_id || "").toLowerCase().trim();
+  const session_id = String(params.session_id || "").toLowerCase().trim();
 
   if (!user_id)    return jsonResponse(false, "missing_field: user_id");
   if (!course_id)  return jsonResponse(false, "missing_field: course_id");
   if (!session_id) return jsonResponse(false, "missing_field: session_id");
 
-  const presenceSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("presence");
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const presenceSheet = ss.getSheetByName("presence");
   if (!presenceSheet) return jsonResponse(false, "sheet_not_found: presence");
 
-  const presences = presenceSheet.getDataRange().getValues();
+  // Gunakan getDisplayValues() agar sinkron dengan apa yang terlihat di sheet (termasuk format angka/teks)
+  const presences = presenceSheet.getDataRange().getDisplayValues();
+  
+  let current_status = "not_checked_in";
+  let presence_id = null;
+  let last_ts = null;
+  let total_attendance_in_course = 0;
+
   for (let i = 1; i < presences.length; i++) {
     const row = presences[i];
     // headers: presence_id[0], user_id[1], device_id[2], course_id[3], session_id[4], status[5], ts[6]
-    if (String(row[1]).trim() === user_id && 
-        String(row[3]).trim() === course_id && 
-        String(row[4]).trim() === session_id) {
+    
+    // Normalisasi data dari sheet (trim & lowercase)
+    const rowUser    = String(row[1]).toLowerCase().trim();
+    const rowCourse  = String(row[3]).toLowerCase().trim();
+    const rowSession = String(row[4]).toLowerCase().trim();
+    const rowStatus  = String(row[5] || "").toLowerCase().trim().replace(/\s+/g, "_"); // "checked in" -> "checked_in"
+
+    if (rowUser === user_id && rowCourse === course_id) {
+      total_attendance_in_course++;
       
-      return jsonResponse(true, null, {
-        user_id: user_id, course_id: course_id, session_id: session_id,
-        presence_id: row[0],
-        status: row[5], 
-        last_ts: row[6]
-      });
+      if (rowSession === session_id) {
+        current_status = rowStatus;
+        presence_id = row[0];
+        last_ts = row[6];
+      }
     }
   }
 
+  const MAX_SESSIONS = 14; 
+  const percentage = Math.min(100, Math.round((total_attendance_in_course / MAX_SESSIONS) * 100));
+
   return jsonResponse(true, null, {
-    user_id: user_id, course_id: course_id, session_id: session_id,
-    status: "not_checked_in", last_ts: null
+    user_id, course_id, session_id,
+    presence_id,
+    status: current_status,
+    last_ts,
+    stats: {
+      total_presence: total_attendance_in_course,
+      percentage: percentage,
+      max_sessions: MAX_SESSIONS
+    }
   });
 }
 
 function getPresenceHistory(params) {
-  const { user_id } = params;
-  const course_id   = params.course_id  || null;
-  const session_id  = params.session_id || null;
+  const user_id    = String(params.user_id || "").toLowerCase().trim();
+  const course_id   = params.course_id ? String(params.course_id).toLowerCase().trim() : null;
+  const session_id  = params.session_id ? String(params.session_id).toLowerCase().trim() : null;
   var   limit       = Number(params.limit);
 
   if (!user_id) return jsonResponse(false, "missing_field: user_id");
-  if (isNaN(limit) || limit <= 0) limit = 50;
+  if (isNaN(limit) || limit <= 0) limit = 100;
 
-  const presenceSheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("presence");
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const presenceSheet = ss.getSheetByName("presence");
   if (!presenceSheet) return jsonResponse(false, "sheet_not_found: presence");
 
-  const rows    = presenceSheet.getDataRange().getValues();
+  // Gunakan getDisplayValues() untuk konsistensi tampilan
+  const rows = presenceSheet.getDataRange().getDisplayValues();
   const results = [];
 
   // headers: presence_id[0], user_id[1], device_id[2], course_id[3],
   //          session_id[4], status[5], ts[6]
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (String(row[1]).trim() !== String(user_id).trim()) continue;
-    if (course_id  && String(row[3]).trim() !== String(course_id).trim())  continue;
-    if (session_id && String(row[4]).trim() !== String(session_id).trim()) continue;
+    const rowUser    = String(row[1]).toLowerCase().trim();
+    const rowCourse  = String(row[3]).toLowerCase().trim();
+    const rowSession = String(row[4]).toLowerCase().trim();
+    const rowStatus  = String(row[5] || "").toLowerCase().trim().replace(/\s+/g, "_");
+
+    if (rowUser !== user_id) continue;
+    if (course_id  && rowCourse !== course_id)  continue;
+    if (session_id && rowSession !== session_id) continue;
 
     results.push({
       presence_id: row[0],
       course_id:   row[3],
       session_id:  row[4],
-      status:      row[5],
+      status:      rowStatus,
       ts:          row[6]
     });
   }
 
-  // Ambil N record terbaru
+  // Ambil N record terbaru (slice dari belakang, lalu balik urutannya)
   const paginated = results.slice(-limit).reverse();
 
   return jsonResponse(true, null, {

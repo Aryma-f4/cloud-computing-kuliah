@@ -72,11 +72,29 @@ function ResultContent() {
     setStage("sending");
     try {
       if (loc?.lat != null && loc?.lng != null) {
-        try { await postGps({ device_id: payload.device_id, ts: getISOTime(), lat: loc.lat, lng: loc.lng, accuracy_m: loc.acc ?? null }); } catch { }
+        try { 
+          await postGps({ 
+            device_id: payload.device_id, 
+            user_id: payload.user_id, // Tambahkan user_id yang tadinya kurang
+            ts: getISOTime(), 
+            lat: loc.lat, 
+            lng: loc.lng, 
+            accuracy_m: loc.acc ?? null 
+          }); 
+        } catch (err) {
+          console.warn("Gagal kirim telemetry GPS (opsional):", err);
+        }
       }
       const r = await checkIn(payload);
       setResp(r);
-    } catch {
+      if (r.ok) {
+        // Redirect otomatis ke status setelah 2 detik jika berhasil
+        setTimeout(() => {
+          router.replace(`/status?user_id=${payload.user_id}&course_id=${payload.course_id}&session_id=${payload.session_id}`);
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Gagal check-in:", err);
       setResp({ ok: false, error: "server_error: network" });
     } finally {
       setStage("done");

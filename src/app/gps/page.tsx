@@ -202,7 +202,7 @@ export default function GpsPage() {
     <PageTransition>
       <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950 rounded-2xl overflow-hidden shadow-xl">
         {/* HEADER */} 
-        <div className="relative bg-primary px-6 pt-12 pb-8 overflow-hidden rounded-b-[2rem]"> 
+        <div className="relative bg-primary px-6 pt-12 pb-8 overflow-hidden rounded-b-4xl"> 
           <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10" /> 
           <div className="relative flex items-center gap-4 text-white"> 
             <button 

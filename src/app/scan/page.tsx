@@ -35,10 +35,10 @@ export default function Scan() {
         </div>
 
         {/* ── TOP VIGNETTE ── */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-gradient-to-b from-neutral-950/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-48 bg-linear-to-b from-neutral-950/80 to-transparent" />
 
         {/* ── BOTTOM VIGNETTE ── */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-56 bg-gradient-to-t from-neutral-950/90 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-56 bg-linear-to-t from-neutral-950/90 to-transparent" />
 
         {/* ── UI LAYER ── */}
         <div className="relative z-20 flex h-full flex-col">

@@ -39,9 +39,41 @@ export type StatusResponse =
   | {
       ok: true;
       data: {
-        presence_id?: string;
+        presence_id?: string | null;
         status: string;
         last_ts?: string | null;
+        stats?: {
+          total_presence: number;
+          percentage: number;
+          max_sessions: number;
+        };
+        debug?: {
+          total_rows: number;
+          searched_user_id: string;
+        };
+      };
+    }
+  | {
+      ok: false;
+      error: string;
+    };
+
+export type PresenceHistoryItem = {
+  presence_id: string;
+  course_id: string;
+  session_id: string;
+  status: string;
+  ts: string;
+};
+
+export type PresenceHistoryResponse =
+  | {
+      ok: true;
+      data: {
+        user_id: string;
+        total: number;
+        limit: number;
+        records: PresenceHistoryItem[];
       };
     }
   | {
