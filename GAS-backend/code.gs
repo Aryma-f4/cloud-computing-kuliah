@@ -477,6 +477,52 @@ function telemetryGpsHistory(params) {
   }
 }
 
+function serverGetAccelData(device_id, limit) {
+  try {
+    if (!limit || isNaN(Number(limit)) || Number(limit) <= 0) limit = 60;
+    else limit = Number(limit);
+
+    var sh = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("telemetry_accel");
+    if (!sh || sh.getLastRow() <= 1) return { ok: true, data: { items: [], devices: [] } };
+
+    var rows = sh.getDataRange().getValues();
+    // headers: device_id[0], t[1], x[2], y[3], z[4], ts[5]
+
+    // Collect unique devices
+    var devSet = {};
+    for (var i = 1; i < rows.length; i++) {
+      devSet[String(rows[i][0]).trim()] = true;
+    }
+    var devices = Object.keys(devSet);
+
+    // Filter by device_id if provided
+    var did = (device_id || "").trim();
+    if (!did && devices.length > 0) did = devices[0]; // default first device
+
+    var items = [];
+    for (var j = 1; j < rows.length; j++) {
+      if (String(rows[j][0]).trim() === did) {
+        items.push({
+          t: rows[j][1],
+          x: Number(rows[j][2]),
+          y: Number(rows[j][3]),
+          z: Number(rows[j][4]),
+          ts: rows[j][5]
+        });
+      }
+    }
+
+    // Take last N
+    if (items.length > limit) {
+      items = items.slice(items.length - limit);
+    }
+
+    return { ok: true, data: { device_id: did, items: items, devices: devices } };
+  } catch (err) {
+    return { ok: false, error: "server_error: " + err.message };
+  }
+}
+
 function jsonResponse(ok, error = null, data = null) {
   const response = { ok: ok };
   if (error) response.error = error;

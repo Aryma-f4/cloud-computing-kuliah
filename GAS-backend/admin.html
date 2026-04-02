@@ -482,17 +482,198 @@
     animation: spin .6s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TAB NAVIGATION ──────────────────────── */
+  .tab-bar {
+    display: flex;
+    gap: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .tab-btn {
+    position: relative;
+    padding: 14px 20px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color .15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--blue); }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: var(--blue);
+    border-radius: 2px 2px 0 0;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── ACCEL DASHBOARD ─────────────────────── */
+  .accel-layout {
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .accel-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .accel-top-bar select {
+    padding: 8px 12px;
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 13px;
+    background: white;
+    outline: none;
+    color: var(--text);
+  }
+  .accel-top-bar select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+  .accel-values {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .accel-val-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    text-align: center;
+  }
+  .accel-val-card .axis-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .accel-val-card .axis-label.x { color: #ef4444; }
+  .accel-val-card .axis-label.y { color: #22c55e; }
+  .accel-val-card .axis-label.z { color: #3b82f6; }
+  .accel-val-card .axis-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .accel-val-card .axis-unit {
+    font-size: 11px;
+    color: var(--light);
+    margin-top: 2px;
+  }
+  .accel-chart-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .accel-chart-card .card-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .accel-chart-card .card-head h3 {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .accel-chart-card canvas {
+    width: 100%;
+    height: 220px;
+    display: block;
+  }
+  .legend-row {
+    display: flex;
+    gap: 16px;
+    padding: 10px 18px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+  }
+  .accel-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .accel-status-bar .dot-live {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .dot-live.on  { background: var(--green); box-shadow: 0 0 0 3px var(--green-mid); }
+  .dot-live.off { background: var(--border2); }
 </style>
 </head>
 <body>
 
-<!-- <header>
-  <div class="header-left">
-    <div class="header-logo">Presensi <span>QR</span></div>
-    <div class="header-tag">Panel Dosen</div>
-  </div>
-  <div class="header-course" id="header-course-info">Belum ada sesi aktif</div>
-</header> -->
+<!-- ══ TAB BAR ══════════════════════════════════════════ -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('qr')" id="tab-qr">
+    ☲ Presensi QR
+  </button>
+  <button class="tab-btn" onclick="switchTab('accel')" id="tab-accel">
+    📈 Accelerometer
+  </button>
+</div>
+
+<!-- ══ TAB 1: PRESENSI QR (existing) ══════════════════ -->
+<div id="panel-qr" class="tab-panel active">
+
+<!-- (comment placeholder removed) -->
 
 <main>
   <!-- ══ KOLOM KIRI ══════════════════════════════════ -->
@@ -627,7 +808,100 @@
   <div class="fs-cd"   id="fs-cd">2:00</div>
 </div>
 
-<div id="toast"></div>
+</div><!-- /panel-qr -->
+
+<!-- ══ TAB 2: ACCELEROMETER ═══════════════════════════ -->
+<div id="panel-accel" class="tab-panel">
+  <div class="accel-layout">
+
+    <!-- Top bar: device selector + refresh -->
+    <div class="accel-top-bar">
+      <div style="font-size:13px;font-weight:600;color:var(--text)">📱 Device:</div>
+      <select id="accel-device-select" onchange="loadAccelData()">
+        <option value="">Memuat...</option>
+      </select>
+      <button class="btn-refresh-tbl" onclick="loadAccelData()">↻ Refresh</button>
+      <div class="auto-row" style="margin:0;padding:6px 10px;flex:0">
+        <label class="switch">
+          <input type="checkbox" id="accel-auto-chk" onchange="onAccelAutoChange(this.checked)">
+          <div class="sw-track"></div>
+          <div class="sw-thumb"></div>
+        </label>
+        <span style="font-size:12px;white-space:nowrap">Auto 5s</span>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="accel-status-bar">
+      <div>
+        <span class="dot-live off" id="accel-dot"></span>
+        <span id="accel-status-text">Belum ada data</span>
+      </div>
+      <div id="accel-count-text" style="font-weight:600;color:var(--text)">0 sampel</div>
+    </div>
+
+    <!-- X Y Z value cards -->
+    <div class="accel-values">
+      <div class="accel-val-card">
+        <div class="axis-label x">X</div>
+        <div class="axis-value" id="ax-val">0.00</div>
+        <div class="axis-unit">m/s²</div>
+      </div>
+      <div class="accel-val-card">
+        <div class="axis-label y">Y</div>
+        <div class="axis-value" id="ay-val">0.00</div>
+        <div class="axis-unit">m/s²</div>
+      </div>
+      <div class="accel-val-card">
+        <div class="axis-label z">Z</div>
+        <div class="axis-value" id="az-val">0.00</div>
+        <div class="axis-unit">m/s²</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="accel-chart-card">
+      <div class="card-head">
+        <h3>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Grafik Accelerometer
+        </h3>
+        <span style="font-size:11px;color:var(--muted)" id="accel-chart-label">—</span>
+      </div>
+      <canvas id="accel-canvas"></canvas>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> X-Axis</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Y-Axis</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Z-Axis</div>
+      </div>
+    </div>
+
+    <!-- Data table -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <h3>Data Terakhir</h3>
+        <span style="font-size:11px;color:var(--muted)" id="accel-tbl-count">0 record</span>
+      </div>
+      <div style="overflow-x:auto;max-height:360px;overflow-y:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Waktu</th>
+              <th>X</th>
+              <th>Y</th>
+              <th>Z</th>
+            </tr>
+          </thead>
+          <tbody id="accel-tbl-body">
+            <tr class="empty-row"><td colspan="5">Pilih device untuk melihat data.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div><!-- /panel-accel --><div id="toast"></div>
 
 <script>
 // ── STATE ─────────────────────────────────────────────
@@ -832,6 +1106,209 @@ function toast(msg, type) {
   el.className   = "show " + (type || "");
   clearTimeout(el._t);
   el._t = setTimeout(function() { el.className = ""; }, 3000);
+}
+
+// ══════════════════════════════════════════════════════
+// ── TAB SWITCHING ────────────────────────────────────
+// ══════════════════════════════════════════════════════
+function switchTab(tab) {
+  // Update tab buttons
+  document.getElementById("tab-qr").className    = "tab-btn" + (tab === "qr" ? " active" : "");
+  document.getElementById("tab-accel").className  = "tab-btn" + (tab === "accel" ? " active" : "");
+
+  // Show/hide panels
+  document.getElementById("panel-qr").className    = "tab-panel" + (tab === "qr" ? " active" : "");
+  document.getElementById("panel-accel").className  = "tab-panel" + (tab === "accel" ? " active" : "");
+
+  // Load accel data on first switch
+  if (tab === "accel" && !accelLoaded) {
+    accelLoaded = true;
+    loadAccelData();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// ── ACCELEROMETER DASHBOARD ──────────────────────────
+// ══════════════════════════════════════════════════════
+var accelLoaded    = false;
+var accelAutoOn    = false;
+var accelAutoTimer = null;
+var accelChartData = [];
+var ACCEL_MAX_PTS  = 60;
+
+function onAccelAutoChange(v) {
+  accelAutoOn = v;
+  if (v) {
+    toast("Auto refresh accelerometer aktif", "ok");
+    accelAutoTimer = setInterval(loadAccelData, 5000);
+  } else {
+    clearInterval(accelAutoTimer);
+    accelAutoTimer = null;
+  }
+}
+
+function loadAccelData() {
+  var sel = document.getElementById("accel-device-select");
+  var did = sel.value || "";
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      if (!r.ok) {
+        toast("Error: " + (r.error || "unknown"), "err");
+        return;
+      }
+      var data = r.data;
+
+      // Populate device dropdown
+      var devices = data.devices || [];
+      var current = data.device_id || "";
+      if (devices.length > 0) {
+        var opts = "";
+        for (var i = 0; i < devices.length; i++) {
+          opts += '<option value="' + devices[i] + '"' +
+                  (devices[i] === current ? ' selected' : '') +
+                  '>' + devices[i] + '</option>';
+        }
+        sel.innerHTML = opts;
+      }
+
+      var items = data.items || [];
+      accelChartData = items;
+
+      // Update values (latest)
+      if (items.length > 0) {
+        var last = items[items.length - 1];
+        document.getElementById("ax-val").textContent = Number(last.x).toFixed(2);
+        document.getElementById("ay-val").textContent = Number(last.y).toFixed(2);
+        document.getElementById("az-val").textContent = Number(last.z).toFixed(2);
+
+        document.getElementById("accel-dot").className = "dot-live on";
+        document.getElementById("accel-status-text").textContent =
+          "Terakhir: " + fmtTime(last.t || last.ts);
+      } else {
+        document.getElementById("ax-val").textContent = "0.00";
+        document.getElementById("ay-val").textContent = "0.00";
+        document.getElementById("az-val").textContent = "0.00";
+        document.getElementById("accel-dot").className = "dot-live off";
+        document.getElementById("accel-status-text").textContent = "Belum ada data";
+      }
+
+      document.getElementById("accel-count-text").textContent = items.length + " sampel";
+      document.getElementById("accel-chart-label").textContent = current;
+      document.getElementById("accel-tbl-count").textContent = items.length + " record";
+
+      // Render chart
+      drawAccelChart(items);
+
+      // Render table (latest 20, reversed)
+      renderAccelTable(items);
+    })
+    .withFailureHandler(function(e) {
+      toast("Gagal memuat data accel: " + e.message, "err");
+    })
+    .serverGetAccelData(did, ACCEL_MAX_PTS);
+}
+
+function drawAccelChart(items) {
+  var canvas = document.getElementById("accel-canvas");
+  if (!canvas) return;
+  var ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  var dpr = window.devicePixelRatio || 1;
+  var rect = canvas.getBoundingClientRect();
+  canvas.width  = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+
+  var W = rect.width;
+  var H = rect.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background
+  ctx.fillStyle = "#fafbfd";
+  ctx.fillRect(0, 0, W, H);
+
+  if (items.length < 2) {
+    ctx.fillStyle = "#9ca3af";
+    ctx.font = "13px 'Figtree', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Belum cukup data untuk grafik", W / 2, H / 2);
+    return;
+  }
+
+  // Grid lines
+  ctx.strokeStyle = "#e5e7eb";
+  ctx.lineWidth = 0.5;
+  for (var g = 0; g < 5; g++) {
+    var gy = (H / 4) * g;
+    ctx.beginPath();
+    ctx.moveTo(0, gy);
+    ctx.lineTo(W, gy);
+    ctx.stroke();
+  }
+
+  // Auto-scale Y
+  var minV = Infinity, maxV = -Infinity;
+  for (var d = 0; d < items.length; d++) {
+    var vals = [items[d].x, items[d].y, items[d].z];
+    for (var v = 0; v < vals.length; v++) {
+      if (vals[v] < minV) minV = vals[v];
+      if (vals[v] > maxV) maxV = vals[v];
+    }
+  }
+  var pad = Math.max(1, (maxV - minV) * 0.15);
+  minV -= pad;
+  maxV += pad;
+  var rangeV = maxV - minV || 1;
+
+  // Draw lines
+  var colors = { x: "#ef4444", y: "#22c55e", z: "#3b82f6" };
+  var axes = ["x", "y", "z"];
+  for (var a = 0; a < axes.length; a++) {
+    var key = axes[a];
+    ctx.strokeStyle = colors[key];
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var i = 0; i < items.length; i++) {
+      var px = (i / (Math.max(items.length - 1, 1))) * W;
+      var py = H - ((items[i][key] - minV) / rangeV) * H;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // Y labels
+  ctx.fillStyle = "#9ca3af";
+  ctx.font = "10px system-ui, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(maxV.toFixed(1), 4, 14);
+  ctx.fillText(((maxV + minV) / 2).toFixed(1), 4, H / 2 + 4);
+  ctx.fillText(minV.toFixed(1), 4, H - 4);
+}
+
+function renderAccelTable(items) {
+  var tbody = document.getElementById("accel-tbl-body");
+  if (items.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Tidak ada data.</td></tr>';
+    return;
+  }
+
+  // Show last 20, newest first
+  var show = items.slice(-20).reverse();
+  var html = "";
+  for (var i = 0; i < show.length; i++) {
+    var row = show[i];
+    html += "<tr>" +
+      "<td style='color:var(--light)'>" + (i + 1) + "</td>" +
+      "<td style='color:var(--muted)'>" + fmtTime(row.t || row.ts) + "</td>" +
+      "<td style='font-weight:600;color:#ef4444'>" + Number(row.x).toFixed(4) + "</td>" +
+      "<td style='font-weight:600;color:#22c55e'>" + Number(row.y).toFixed(4) + "</td>" +
+      "<td style='font-weight:600;color:#3b82f6'>" + Number(row.z).toFixed(4) + "</td>" +
+      "</tr>";
+  }
+  tbody.innerHTML = html;
 }
 </script>
 </body>
