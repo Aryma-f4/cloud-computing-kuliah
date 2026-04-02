@@ -93,6 +93,37 @@ function serverGenerateQR(course_id, session_id) {
   }
 }
 
+/**
+ * Dipanggil dari admin.html via google.script.run.serverGenerateAutoscanQR(c, s)
+ * Menghasilkan QR berformat: AUTOSCAN|TKN-xxx|course_id|session_id
+ */
+function serverGenerateAutoscanQR(course_id, session_id) {
+  try {
+    if (!course_id || !session_id) return { ok: false, error: "missing_field" };
+
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName("tokens");
+    if (!sheet) return { ok: false, error: "sheet_not_found: tokens" };
+
+    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const raw_token  = "TKN-" + randomPart;
+
+    const expiryDate = new Date();
+    expiryDate.setMinutes(expiryDate.getMinutes() + 2);
+    const expires_at = expiryDate.toISOString();
+
+    // Simpan raw token ke sheet (kompatibel dengan checkIn)
+    sheet.appendRow([course_id, session_id, raw_token, expires_at, new Date().toISOString()]);
+
+    // Format autoscan untuk QR code
+    const autoscan_qr = "AUTOSCAN|" + raw_token + "|" + course_id + "|" + session_id;
+
+    return { ok: true, data: { qr_token: autoscan_qr, expires_at: expires_at } };
+
+  } catch (err) {
+    return { ok: false, error: "server_error: " + err.message };
+  }
+}
+
 function serverGetAllPresence(course_id, session_id) {
   try {
     if (!course_id || !session_id) return { ok: false, error: "missing_field" };

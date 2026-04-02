@@ -697,6 +697,9 @@
         <button class="btn btn-blue" id="btn-gen" onclick="doGenerate()">
           <span id="gen-label">Generate QR</span>
         </button>
+        <button class="btn btn-outline" id="btn-gen-auto" onclick="doGenerateAutoscan()" style="margin-top:8px;border-color:#d97706;color:#d97706;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='white'">
+          <span>⚡ Generate Autoscan QR <small style="font-weight:400;font-size:11px">(swap test)</small></span>
+        </button>
 
         <!-- Token result -->
         <div class="token-box" id="token-box">
@@ -935,6 +938,34 @@ function doGenerate() {
       toast("Gagal: " + e.message, "err");
     })
     .serverGenerateQR(c, s);
+}
+
+// ── GENERATE AUTOSCAN QR (untuk swap test) ────────────
+function doGenerateAutoscan() {
+  var c = document.getElementById("inp-course").value.trim();
+  var s = document.getElementById("inp-session").value.trim();
+  if (!c || !s) { toast("Course ID & Session ID wajib diisi", "err"); return; }
+
+  document.getElementById("btn-gen-auto").disabled = true;
+  document.getElementById("btn-gen-auto").innerHTML = "<span class='spin'></span> Generating...";
+
+  google.script.run
+    .withSuccessHandler(function(r) {
+      document.getElementById("btn-gen-auto").disabled = false;
+      document.getElementById("btn-gen-auto").innerHTML = "⚡ Generate Autoscan QR <small style='font-weight:400;font-size:11px'>(swap test)</small>";
+      if (!r.ok) { toast("Error: " + r.error, "err"); return; }
+      curCourse  = c;
+      curSession = s;
+      // qr_token sudah berformat AUTOSCAN|TKN-xxx|course|session
+      applyToken(r.data.qr_token, r.data.expires_at);
+      toast("⚡ Autoscan QR digenerate!", "ok");
+    })
+    .withFailureHandler(function(e) {
+      document.getElementById("btn-gen-auto").disabled = false;
+      document.getElementById("btn-gen-auto").innerHTML = "⚡ Generate Autoscan QR <small style='font-weight:400;font-size:11px'>(swap test)</small>";
+      toast("Gagal: " + e.message, "err");
+    })
+    .serverGenerateAutoscanQR(c, s);
 }
 
 function applyToken(token, expires_at) {
