@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { setItem, getItem, keys } from "@/src/lib/storage";
+import { setItem, getItem, removeItem, keys } from "@/src/lib/storage";
 import {
   QrCode, BadgeCheck, BookOpen, CalendarDays,
-  Activity, ChevronRight, Wifi, Map as MapIcon
-} 
+  Activity, ChevronRight, Wifi, Map as MapIcon, LogOut
+}
 from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
@@ -47,6 +47,14 @@ export default function Home() {
     setItem(keys.last_session_id, v);
   }
 
+  function handleLogout() {
+    removeItem(keys.user_id);
+    removeItem(keys.device_id);
+    removeItem(keys.last_course_id);
+    removeItem(keys.last_session_id);
+    router.replace("/login");
+  }
+
   if (!isLoaded) return null; // Prevent hydration mismatch by waiting for client-side load
 
   return (
@@ -60,11 +68,19 @@ export default function Home() {
           <div className="absolute top-8 -right-4 h-24 w-24 rounded-full bg-[#9CD5FF]/20" />
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-5">
+            <div className="flex items-center justify-between mb-5">
               <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
                 <Wifi className="h-3 w-3" />
                 Online
               </span>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/80 transition hover:bg-white/25 active:scale-95"
+                title="Logout"
+              >
+                <LogOut className="h-3 w-3" />
+                Logout
+              </button>
             </div>
             <p className="text-sm text-white/70 font-medium">Selamat datang,</p>
             <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
@@ -234,6 +250,23 @@ export default function Home() {
   <ChevronRight className={`h-5 w-5 shrink-0 ${isReady ? "opacity-30" : "opacity-10"}`} />
 </button>
 
+          {/* ── LOGOUT ── */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-between rounded-2xl bg-red-50 dark:bg-red-900/20 px-5 py-4 text-left ring-1 ring-red-100 dark:ring-red-900/40 transition-all duration-200 hover:bg-red-100 dark:hover:bg-red-900/30 active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/40">
+                <LogOut className="h-5 w-5 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-red-700 dark:text-red-400 leading-tight">Logout</p>
+                <p className="text-xs text-red-400 dark:text-red-500 mt-0.5">Hapus sesi dan keluar</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 shrink-0 text-red-300 dark:text-red-600" />
+          </button>
+
           {/* ── HINT TEXT (visible only when not ready) ── */}
           {!isReady && (
             <p className="text-center text-xs text-neutral-400 dark:text-neutral-600">
@@ -245,4 +278,5 @@ export default function Home() {
       </div>
     </PageTransition>
   );
+
 }

@@ -396,7 +396,7 @@ export default function AccelerometerPage() {
                 <div className="flex flex-col gap-3">
                     {!running ? (
                         <Button
-                            className="h-14 w-full rounded-xl bg-neutral-900 text-white shadow-none hover:bg-neutral-800 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-colors"
+                            className="h-14 w-full rounded-xl bg-blue-600 text-white shadow-none hover:bg-blue-700 dark:bg-blue-50 dark:text-blue-900 dark:hover:bg-blue-200 transition-colors"
                             onClick={start}
                         >
                             <Play className="mr-2 h-5 w-5" />
@@ -454,7 +454,7 @@ export default function AccelerometerPage() {
                 {/* Back button */}
                 <Button
                     variant="outline"
-                    className="h-12 w-full rounded-xl border-neutral-200 text-neutral-700 shadow-none hover:bg-neutral-50 dark:border-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-900 transition-colors"
+                    className="h-12 w-full rounded-xl border-neutral-200 text-neutral-700 shadow-none hover:bg-neutral-50 dark:border-blue-600 dark:text-neutral-300 dark:hover:bg-neutral-900 transition-colors"
                     onClick={() => router.push("/")}
                 >
                     <ArrowLeft className="mr-2 h-4 w-4" />
