@@ -64,7 +64,7 @@ export default function AccelerometerPage() {
             if (resp.ok && resp.data) {
                 setTotalAccepted((p) => p + resp.data!.accepted);
             } else {
-                setLastError(resp.error ?? "unknown_error");
+                setLastError(resp.error ?? `resp: ${JSON.stringify(resp).slice(0, 120)}`);
             }
         } catch (err: unknown) {
             setLastError(err instanceof Error ? err.message : "network_error");

@@ -21,14 +21,12 @@ const BASE_URL = ENV_BASE_URL || HARDCODED_GAS_URL;
 
 async function requestJson(url: string, init?: RequestInit) {
   const res = await fetch(url, init);
-  if (!res.ok) {
-    throw new Error(`http_${res.status}`);
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`invalid_json (status ${res.status}): ${text.slice(0, 200)}`);
   }
-  const ct = res.headers.get("content-type") || "";
-  if (!ct.includes("application/json") && !ct.includes("text/plain")) {
-    throw new Error("invalid_response");
-  }
-  return res.json();
 }
 
 export async function checkIn(payload: CheckInRequest): Promise<CheckInResponse> {
