@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 type ParsedQR = { token: string; courseId: string | null; sessionId: string | null };
 
 function parseQR(raw: string): ParsedQR | null {
-  // Format autoscan: AUTOSCAN|TKN-xxx|course_id|session_id
+  // Format 1: AUTOSCAN|TKN-xxx|course_id|session_id
   if (raw.startsWith("AUTOSCAN|")) {
     const parts = raw.split("|");
     if (parts.length >= 4 && parts[1].startsWith("TKN-")) {
@@ -23,10 +23,29 @@ function parseQR(raw: string): ParsedQR | null {
     toast.error("Format AUTOSCAN tidak lengkap");
     return null;
   }
-  // Format biasa: TKN-xxx (course/session perlu diinput manual)
+
+  // Format 2: JSON — {"qr_token":"TKN-xxx","course_id":"...","session_id":"..."}
+  if (raw.startsWith("{")) {
+    try {
+      const obj = JSON.parse(raw);
+      const token = obj.qr_token || obj.token || "";
+      if (!token) { toast.error("JSON QR: field qr_token tidak ditemukan"); return null; }
+      return {
+        token,
+        courseId:  obj.course_id  || null,
+        sessionId: obj.session_id || null,
+      };
+    } catch {
+      toast.error("JSON QR tidak valid");
+      return null;
+    }
+  }
+
+  // Format 3: TKN-xxx biasa (course/session perlu diinput manual)
   if (raw.startsWith("TKN-")) {
     return { token: raw, courseId: null, sessionId: null };
   }
+
   toast.error("QR tidak dikenali");
   return null;
 }
