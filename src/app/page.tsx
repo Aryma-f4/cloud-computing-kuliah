@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { getItem, removeItem, keys } from "@/src/lib/storage";
 import {
   QrCode, PenLine, Settings, ChevronRight, LogOut,
-  Zap, Server, Globe,
+  Zap, Server, Globe, Activity, Map as MapIcon,
 } from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
@@ -80,7 +80,7 @@ export default function ChoicePage() {
           </p>
 
           {/* ── Mode 1: Input Manual ── */}
-          <button
+          {/* <button
             onClick={() => router.push("/home")}
             className="w-full flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-900 px-5 py-5 text-left shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition hover:ring-neutral-200 dark:hover:ring-neutral-700 active:scale-[0.98]"
           >
@@ -98,7 +98,7 @@ export default function ChoicePage() {
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
-          </button>
+          </button> */}
 
           {/* ── Mode 2: Scan QR Otomatis ── */}
           <button
@@ -111,18 +111,47 @@ export default function ChoicePage() {
               </div>
               <div className="text-left">
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-base text-white leading-tight">Scan QR Otomatis</p>
+                  <p className="font-bold text-base text-white leading-tight">Scan QR</p>
                   <span className="flex items-center gap-1 rounded-full bg-yellow-400/20 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
                     <Zap className="h-2.5 w-2.5" />AUTO
                   </span>
                 </div>
                 <p className="text-xs text-white/70 mt-0.5">
-                  Tanpa input manual — Course &amp; Session dari QR
+                  {/* Tanpa input manual — Course &amp; Session dari QR */}
                 </p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-white/50 shrink-0" />
           </button>
+
+          {/* ── Sensor & GPS Grid ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => router.push("/accelerometer")}
+              className="flex flex-col gap-3 rounded-2xl bg-white dark:bg-neutral-900 p-4 text-left shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition hover:ring-neutral-200 dark:hover:ring-neutral-700 active:scale-[0.97]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 dark:bg-orange-900/40">
+                <Activity className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">Sensor</p>
+                <p className="text-xs text-neutral-400 mt-0.5">Akselerometer</p>
+              </div>
+            </button>
+
+            <button
+              onClick={() => router.push("/gps")}
+              className="flex flex-col gap-3 rounded-2xl bg-white dark:bg-neutral-900 p-4 text-left shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition hover:ring-neutral-200 dark:hover:ring-neutral-700 active:scale-[0.97]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/40">
+                <MapIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 leading-tight">GPS</p>
+                <p className="text-xs text-neutral-400 mt-0.5">Lokasi & Tracking</p>
+              </div>
+            </button>
+          </div>
 
           {/* ── Divider ── */}
           <div className="flex items-center gap-3 px-1">

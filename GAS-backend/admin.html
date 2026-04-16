@@ -953,18 +953,25 @@ function applyToken(token, expires_at) {
   // QR card label
   document.getElementById("qr-session-label").textContent = curCourse + "  ·  " + curSession;
 
-  // QR render
-  renderQR(token, "qrcode", 200);
+  // ── QR content sebagai JSON agar kelompok lain bisa parse course+session ──
+  var qrContent = JSON.stringify({
+    qr_token:   token,
+    course_id:  curCourse,
+    session_id: curSession
+  });
+
+  // QR render (berisi JSON, bukan token biasa)
+  renderQR(qrContent, "qrcode", 200);
   document.getElementById("qr-empty").style.display = "none";
   document.getElementById("qr-wrap").classList.add("show");
-  document.getElementById("qr-tok").textContent     = token;
+  document.getElementById("qr-tok").textContent     = token;  // display tetap TKN-xxx
   document.getElementById("qr-exp-lbl").textContent = "Kedaluwarsa: " + fmtTime(expires_at);
 
   // Fullscreen update
   document.getElementById("fs-tok").textContent = token;
   document.getElementById("fs-sub").textContent = "Kedaluwarsa: " + fmtTime(expires_at);
   if (document.getElementById("fs").classList.contains("show")) {
-    renderQR(token, "fs-qrcode", 300);
+    renderQR(qrContent, "fs-qrcode", 300);
   }
 
   // Stats sesi

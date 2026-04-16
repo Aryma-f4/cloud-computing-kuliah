@@ -52,12 +52,16 @@ export async function getStatus(
   });
 }
 
-export async function getPresenceHistory(params: { user_id: string, course_id?: string, session_id?: string, limit?: number }): Promise<PresenceHistoryResponse> {
+export async function getPresenceHistory(
+  params: { user_id: string, course_id?: string, session_id?: string, limit?: number },
+  customBaseUrl?: string | null,
+): Promise<PresenceHistoryResponse> {
+  const url = (customBaseUrl?.trim() || BASE_URL);
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) query.append(key, String(value));
   });
-  return requestJson(`${BASE_URL}?path=presence/history&${query.toString()}`, {
+  return requestJson(`${url}?path=presence/history&${query.toString()}`, {
     method: "GET",
   });
 }

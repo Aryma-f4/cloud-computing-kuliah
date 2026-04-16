@@ -48,7 +48,7 @@ function StatusContent() {
     try {
       const [r, h] = await Promise.all([
         getStatus({ user_id: u, course_id: c, session_id: s }, extUrl),
-        getPresenceHistory({ user_id: u, course_id: c, limit: 5 })
+        getPresenceHistory({ user_id: u, course_id: c, limit: 5 }, extUrl)
       ]);
       setResp(r);
       setHistory(h);
