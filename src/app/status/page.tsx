@@ -39,11 +39,15 @@ function StatusContent() {
     const s = (params?.s || sessionId || "").toLowerCase().trim();
 
     if (!u || !c || !s) return;
+
+    // Cek apakah pakai GAS eksternal
+    const swapMode = getItem(keys.swap_mode);
+    const extUrl   = swapMode === "external" ? (getItem(keys.swap_gas_url)?.trim() || null) : null;
     
     setLoading(true);
     try {
       const [r, h] = await Promise.all([
-        getStatus({ user_id: u, course_id: c, session_id: s }),
+        getStatus({ user_id: u, course_id: c, session_id: s }, extUrl),
         getPresenceHistory({ user_id: u, course_id: c, limit: 5 })
       ]);
       setResp(r);

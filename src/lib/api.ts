@@ -41,9 +41,13 @@ export async function checkIn(
   });
 }
 
-export async function getStatus(query: StatusQuery): Promise<StatusResponse> {
+export async function getStatus(
+  query: StatusQuery,
+  customBaseUrl?: string | null,
+): Promise<StatusResponse> {
+  const url = (customBaseUrl?.trim() || BASE_URL);
   const params = new URLSearchParams(query as Record<string, string>);
-  return requestJson(`${BASE_URL}?path=presence/status&${params.toString()}`, {
+  return requestJson(`${url}?path=presence/status&${params.toString()}`, {
     method: "GET",
   });
 }
