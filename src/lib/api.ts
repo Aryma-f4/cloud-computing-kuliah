@@ -29,8 +29,12 @@ async function requestJson(url: string, init?: RequestInit) {
   }
 }
 
-export async function checkIn(payload: CheckInRequest): Promise<CheckInResponse> {
-  return requestJson(`${BASE_URL}?path=presence/checkin`, {
+export async function checkIn(
+  payload: CheckInRequest,
+  customBaseUrl?: string | null,
+): Promise<CheckInResponse> {
+  const url = (customBaseUrl?.trim() || BASE_URL);
+  return requestJson(`${url}?path=presence/checkin`, {
     method: "POST",
     headers: { "Content-Type": "text/plain" },
     body: JSON.stringify(payload),

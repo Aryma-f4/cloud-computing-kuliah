@@ -63,7 +63,7 @@ export default function LoginPage() {
           >
             <path
               d="M-20 40C40 0 100 20 140 60C180 100 240 110 290 80C335 55 380 55 430 95"
-              stroke="white"
+              stroke="white"                
               strokeWidth="2"
             />
             <path

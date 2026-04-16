@@ -42,7 +42,9 @@ function errMsg(e?: string) {
 function ResultContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const token = useMemo(() => params.get("token") ?? "", [params]);
+  const token    = useMemo(() => params.get("token") ?? "", [params]);
+  const isSwap   = params.get("mode") === "swap";
+  const swapUrl  = useMemo(() => isSwap ? getItem(keys.swap_gas_url) : null, [isSwap]);
 
   const payload = useMemo(() => {
     if (!token) return null;
@@ -92,7 +94,7 @@ function ResultContent() {
           console.warn("Gagal kirim telemetry GPS (opsional):", err);
         }
       }
-      const r = await checkIn(payload);
+      const r = await checkIn({ ...payload, ts: getISOTime() }, swapUrl);
       setResp(r);
       if (r.ok) {
         // Update localStorage dengan course+session AKTUAL dari server
