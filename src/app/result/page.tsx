@@ -43,8 +43,15 @@ function ResultContent() {
   const router = useRouter();
   const params = useSearchParams();
   const token    = useMemo(() => params.get("token") ?? "", [params]);
-  const isSwap   = params.get("mode") === "swap";
-  const swapUrl  = useMemo(() => isSwap ? getItem(keys.swap_gas_url) : null, [isSwap]);
+  // Baca konfigurasi GAS dari settings (swap_mode: "own" | "external")
+  const targetUrl = useMemo(() => {
+    const mode = getItem(keys.swap_mode);
+    if (mode === "external") {
+      const url = getItem(keys.swap_gas_url);
+      return url?.trim() || null;
+    }
+    return null; // "own" → gunakan BASE_URL default
+  }, []);
 
   const payload = useMemo(() => {
     if (!token) return null;
@@ -94,7 +101,7 @@ function ResultContent() {
           console.warn("Gagal kirim telemetry GPS (opsional):", err);
         }
       }
-      const r = await checkIn({ ...payload, ts: getISOTime() }, swapUrl);
+      const r = await checkIn({ ...payload, ts: getISOTime() }, targetUrl);
       setResp(r);
       if (r.ok) {
         // Update localStorage dengan course+session AKTUAL dari server

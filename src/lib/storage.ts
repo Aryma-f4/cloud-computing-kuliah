@@ -5,7 +5,8 @@ export const keys = {
   device_id:      "device_id",
   last_course_id: "last_course_id",
   last_session_id:"last_session_id",
-  swap_gas_url:   "swap_gas_url",   // URL GAS kelompok lain untuk swap test
+  swap_gas_url:   "swap_gas_url",   // URL GAS eksternal
+  swap_mode:      "swap_mode",      // "own" | "external"
 } as const;
 
 export function getItem(key: string) {
