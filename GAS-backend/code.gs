@@ -140,27 +140,27 @@ function generateQR(body) {
 }
 
 function checkIn(body) {
-  const user_id    = String(body.user_id || "").trim();
-  const device_id  = String(body.device_id || "").trim();
-  const course_id  = String(body.course_id || "").trim();
-  const session_id = String(body.session_id || "").trim();
-  const qr_token   = String(body.qr_token || "").trim();
-  const ts         = String(body.ts || "").trim();
-  
-  const loc_lat  = body.loc_lat || null;
-  const loc_lng  = body.loc_lng || null;
-  const loc_acc  = body.loc_acc || null;
-  const accel_x  = body.accel_x || null;
-  const accel_y  = body.accel_y || null;
-  const accel_z  = body.accel_z || null;
-  const accel_m  = body.accel_m || null;
+  const user_id   = String(body.user_id   || "").trim();
+  const device_id = String(body.device_id || "").trim();
+  const qr_token  = String(body.qr_token  || "").trim();
+  const ts        = String(body.ts        || "").trim();
+  // course_id & session_id dari client TIDAK dipakai untuk lookup —
+  // akan diambil langsung dari record token di server (authoritative).
+  // Ini memungkinkan kelompok lain (swap test) scan QR ini tanpa
+  // perlu tahu course_id / session_id kelompok yang punya QR.
 
-  if (!user_id)    return jsonResponse(false, "missing_field: user_id");
-  if (!device_id)  return jsonResponse(false, "missing_field: device_id");
-  if (!course_id)  return jsonResponse(false, "missing_field: course_id");
-  if (!session_id) return jsonResponse(false, "missing_field: session_id");
-  if (!qr_token)   return jsonResponse(false, "missing_field: qr_token");
-  if (!ts)         return jsonResponse(false, "missing_field: ts");
+  const loc_lat = body.loc_lat || null;
+  const loc_lng = body.loc_lng || null;
+  const loc_acc = body.loc_acc || null;
+  const accel_x = body.accel_x || null;
+  const accel_y = body.accel_y || null;
+  const accel_z = body.accel_z || null;
+  const accel_m = body.accel_m || null;
+
+  if (!user_id)   return jsonResponse(false, "missing_field: user_id");
+  if (!device_id) return jsonResponse(false, "missing_field: device_id");
+  if (!qr_token)  return jsonResponse(false, "missing_field: qr_token");
+  if (!ts)        return jsonResponse(false, "missing_field: ts");
 
   const ss            = SpreadsheetApp.openById(SPREADSHEET_ID);
   const tokensSheet   = ss.getSheetByName("tokens");
@@ -172,35 +172,44 @@ function checkIn(body) {
   const tokens = tokensSheet.getDataRange().getValues();
   let validToken = null;
 
+  // Cari token HANYA berdasarkan qr_token (kolom index 2).
+  // Tidak mensyaratkan course_id / session_id dari client —
+  // sehingga siapapun yang memegang token ini bisa check-in.
   for (let i = 1; i < tokens.length; i++) {
-    if (String(tokens[i][0]).trim() === course_id && 
-        String(tokens[i][1]).trim() === session_id && 
-        String(tokens[i][2]).trim() === qr_token) {
+    if (String(tokens[i][2]).trim() === qr_token) {
       validToken = tokens[i];
       break;
     }
   }
 
-  if (!validToken)                             return jsonResponse(false, "token_invalid");
-  if (new Date(ts) > new Date(validToken[3]))  return jsonResponse(false, "token_expired");
+  if (!validToken)                            return jsonResponse(false, "token_invalid");
+  if (new Date(ts) > new Date(validToken[3])) return jsonResponse(false, "token_expired");
 
+  // Ambil course_id & session_id dari TOKEN RECORD (server) — bukan dari client.
+  // toLowerCase agar konsisten dengan getStatus() dan menghindari mismatch case.
+  const actual_course_id  = String(validToken[0]).toLowerCase().trim();
+  const actual_session_id = String(validToken[1]).toLowerCase().trim();
+  const actual_user_id    = user_id.toLowerCase().trim();
+
+  // Cek apakah user sudah check-in di sesi ini (pakai actual course+session dari server)
   const presences = presenceSheet.getDataRange().getValues();
   for (let i = 1; i < presences.length; i++) {
-    // presence_id[0], user_id[1], device_id[2], course_id[3], session_id[4]
-    if (String(presences[i][1]).trim() === user_id && 
-        String(presences[i][3]).trim() === course_id && 
-        String(presences[i][4]).trim() === session_id) {
+    // headers: presence_id[0], user_id[1], device_id[2], course_id[3], session_id[4]
+    if (String(presences[i][1]).toLowerCase().trim() === actual_user_id &&
+        String(presences[i][3]).toLowerCase().trim() === actual_course_id &&
+        String(presences[i][4]).toLowerCase().trim() === actual_session_id) {
       return jsonResponse(false, "already_checked_in");
     }
   }
 
+  // Simpan presence dengan course+session DARI SERVER (bukan dari client)
   const presence_id = "PR-" + Utilities.getUuid().substring(0, 5).toUpperCase();
   presenceSheet.appendRow([
     presence_id,
-    user_id,
+    actual_user_id,
     device_id,
-    course_id,
-    session_id,
+    actual_course_id,   // ← dari server
+    actual_session_id,  // ← dari server
     "checked_in",
     ts,
     loc_lat,
@@ -212,7 +221,13 @@ function checkIn(body) {
     accel_m
   ]);
 
-  return jsonResponse(true, null, { presence_id: presence_id, status: "checked_in" });
+  // Kembalikan actual course+session ke client agar bisa update localStorage
+  return jsonResponse(true, null, {
+    presence_id:  presence_id,
+    status:       "checked_in",
+    course_id:    actual_course_id,
+    session_id:   actual_session_id,
+  });
 }
 
 function getStatus(params) {
