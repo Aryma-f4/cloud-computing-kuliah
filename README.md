@@ -35,19 +35,53 @@ E-Absen adalah aplikasi presensi kuliah berbasis `Next.js` dengan backend `Googl
 - Admin panel GAS untuk generate QR presensi
 - Container MySQL dan Adminer untuk kebutuhan eksperimen database lokal
 
-## Alur Pengguna
-1. Pengguna login dengan `NIM / user_id`.
-2. Aplikasi menyimpan `user_id`, `device_id`, `last_course_id`, dan `last_session_id` di `localStorage`.
-3. Pengguna memilih mode:
-   - manual
-   - auto scan
-4. Saat scan berhasil, pengguna diarahkan ke halaman hasil.
-5. Halaman hasil mengambil lokasi browser dan menampilkan peta konfirmasi.
-6. Saat tombol kirim ditekan:
-   - GPS telemetry dikirim lebih dulu jika tersedia
-   - request check-in dikirim ke endpoint presensi
-7. Jika sukses, sistem menampilkan `presence_id` dan status.
-8. Pengguna dapat membuka `/status` untuk memverifikasi hasil presensi dan melihat riwayat.
+## 🔄 Alur Pengguna (Workflow)
+
+Berikut adalah alur kerja utama aplikasi E-Absen dari mulai login hingga proses presensi selesai. Alur ini mencakup pemeriksaan autentikasi lokal, pemilihan mode presensi, validasi QR, hingga pengiriman data telemetry dan presensi ke backend.
+
+```mermaid
+flowchart TD
+    Start((Mulai)) --> CheckAuth{Cek localStorage<br/>'user_id' & 'device_id'}
+    CheckAuth -- Kosong --> Login[Halaman /login<br/>Input NIM & Generate Device ID]
+    Login --> SaveLocal[Simpan ke localStorage]
+    SaveLocal --> Home
+    CheckAuth -- Ada --> Home[Halaman Utama /home<br/>Pilih Mode Presensi]
+
+    Home --> ModeManual[Mode Manual<br/>Input Course ID & Session ID]
+    Home --> ModeAuto[Mode Auto Scan<br/>Swap Test]
+
+    ModeManual --> ScanManual[Halaman /scan<br/>Scan QR Standar]
+    ModeManual --> Status[Halaman /status<br/>Cek Status Presensi]
+    ModeAuto --> ScanAuto[Halaman /autoscan<br/>Scan QR Auto]
+
+    ScanManual --> ValidQR{Validasi Format<br/>QR TKN-XXXXXX}
+    ScanAuto --> ValidAuto{Validasi Format<br/>AUTOSCAN|...}
+
+    ValidQR -- Tidak Valid --> ToastErr1[Toast Error] -.-> ScanManual
+    ValidAuto -- Tidak Valid --> ToastErr2[Toast Error] -.-> ScanAuto
+
+    ValidQR -- Valid --> Result[Halaman /result<br/>Konfirmasi Lokasi & Kirim Telemetry]
+    ValidAuto -- Valid --> Result
+
+    Result --> SendGPS[Kirim Data GPS<br/>Jika Tersedia]
+    SendGPS --> ApiCheckin[POST /presence/checkin]
+
+    ApiCheckin --> ApiResult{Response API}
+    ApiResult -- Sukses --> SuksesUI[Tampilkan Berhasil & Status]
+    ApiResult -- Gagal --> GagalUI[Tampilkan Pesan Error]
+
+    SuksesUI --> Home
+    GagalUI --> Home
+    Status --> Home
+```
+
+**Penjelasan Alur:**
+1. **Autentikasi Lokal:** Pengguna login dengan `NIM / user_id`. Aplikasi akan men-generate `device_id` dari fingerprint perangkat dan menyimpannya beserta identitas pengguna di `localStorage`.
+2. **Pemilihan Mode:** Pengguna memilih antara **Mode Manual** (memasukkan Course ID & Session ID sendiri) atau **Mode Auto Scan** (untuk kebutuhan swap test).
+3. **Proses Scan:** Kamera akan memindai QR Code. Sistem akan melakukan validasi format secara instan di sisi klien.
+4. **Konfirmasi & Telemetry:** Jika valid, pengguna diarahkan ke halaman hasil untuk melihat titik lokasi (GPS).
+5. **Submit:** Sistem mengirimkan data GPS (telemetry) terlebih dahulu, dilanjutkan dengan request check-in presensi ke Google Apps Script.
+6. **Status:** Pengguna menerima umpan balik (berhasil/gagal) dan dapat mengecek riwayat kehadiran di halaman `/status`.
 
 ## Daftar Halaman
 - `/`
