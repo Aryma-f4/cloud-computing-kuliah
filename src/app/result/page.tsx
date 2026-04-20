@@ -2,7 +2,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { checkIn, postGps } from "@/src/lib/api";
-import { getItem, keys, getISOTime } from "@/src/lib/storage";
+import { getItem, setItem, keys, getISOTime } from "@/src/lib/storage";
 import type { CheckInResponse } from "@/src/types/presence";
 import { PageTransition } from "@/src/components/PageTransition";
 import { MapPin, CheckCircle2, XCircle, Loader2, ChevronLeft, ShieldCheck } from "lucide-react";
@@ -42,16 +42,32 @@ function errMsg(e?: string) {
 function ResultContent() {
   const router = useRouter();
   const params = useSearchParams();
-  const token = useMemo(() => params.get("token") ?? "", [params]);
+  const token    = useMemo(() => params.get("token") ?? "", [params]);
+  // Baca konfigurasi GAS dari settings (swap_mode: "own" | "external")
+  const targetUrl = useMemo(() => {
+    const mode = getItem(keys.swap_mode);
+    if (mode === "external") {
+      const url = getItem(keys.swap_gas_url);
+      return url?.trim() || null;
+    }
+    return null; // "own" → gunakan BASE_URL default
+  }, []);
 
   const payload = useMemo(() => {
     if (!token) return null;
     const user_id   = getItem(keys.user_id);
     const device_id = getItem(keys.device_id);
-    const course_id = getItem(keys.last_course_id);
-    const session_id= getItem(keys.last_session_id);
-    if (!user_id || !device_id || !course_id || !session_id) return null;
-    return { user_id, device_id, course_id, session_id, qr_token: token, ts: getISOTime() };
+    // course_id & session_id dari localStorage hanya sebagai fallback tampilan —
+    // server akan menggunakan course+session dari token record (swap test safe).
+    if (!user_id || !device_id) return null;
+    return {
+      user_id,
+      device_id,
+      course_id:  getItem(keys.last_course_id)  ?? "",
+      session_id: getItem(keys.last_session_id) ?? "",
+      qr_token: token,
+      ts: getISOTime(),
+    };
   }, [token]);
 
   const [resp,  setResp]  = useState<CheckInResponse | null>(null);
@@ -85,12 +101,19 @@ function ResultContent() {
           console.warn("Gagal kirim telemetry GPS (opsional):", err);
         }
       }
-      const r = await checkIn(payload);
+      const r = await checkIn({ ...payload, ts: getISOTime() }, targetUrl);
       setResp(r);
       if (r.ok) {
-        // Redirect otomatis ke status setelah 2 detik jika berhasil
+        // Update localStorage dengan course+session AKTUAL dari server
+        // (penting untuk swap test: course+session bisa berbeda dari localStorage awal)
+        const actualCourse  = r.data.course_id  ?? payload.course_id;
+        const actualSession = r.data.session_id ?? payload.session_id;
+        if (actualCourse)  setItem(keys.last_course_id,  actualCourse);
+        if (actualSession) setItem(keys.last_session_id, actualSession);
+
+        // Redirect ke status dengan actual course+session dari server
         setTimeout(() => {
-          router.replace(`/status?user_id=${payload.user_id}&course_id=${payload.course_id}&session_id=${payload.session_id}`);
+          router.replace(`/status?user_id=${payload.user_id}&course_id=${actualCourse}&session_id=${actualSession}`);
         }, 2000);
       }
     } catch (err) {

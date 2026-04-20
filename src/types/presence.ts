@@ -1,10 +1,11 @@
 export type CheckInRequest = {
   user_id: string;
   device_id: string;
-  course_id: string;
-  session_id: string;
   qr_token: string;
   ts: string;
+  // course_id & session_id opsional — server mengambil dari token record
+  course_id?: string;
+  session_id?: string;
   loc_lat?: number | null;
   loc_lng?: number | null;
   loc_acc?: number | null;
@@ -19,6 +20,8 @@ export type CheckInSuccess = {
   data: {
     presence_id: string;
     status: string;
+    course_id?: string;   // actual course dari server (untuk swap test)
+    session_id?: string;  // actual session dari server (untuk swap test)
   };
 };
 
