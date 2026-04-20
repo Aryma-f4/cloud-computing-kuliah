@@ -41,34 +41,34 @@ Berikut adalah alur kerja utama aplikasi E-Absen dari mulai login hingga proses 
 
 ```mermaid
 flowchart TD
-    Start((Mulai)) --> CheckAuth{Cek localStorage<br/>'user_id' & 'device_id'}
-    CheckAuth -- Kosong --> Login[Halaman /login<br/>Input NIM & Generate Device ID]
-    Login --> SaveLocal[Simpan ke localStorage]
+    Start(("Mulai")) --> CheckAuth{"Cek localStorage<br/>'user_id' & 'device_id'"}
+    CheckAuth -- Kosong --> Login["Halaman /login<br/>Input NIM & Generate Device ID"]
+    Login --> SaveLocal["Simpan ke localStorage"]
     SaveLocal --> Home
-    CheckAuth -- Ada --> Home[Halaman Utama /home<br/>Pilih Mode Presensi]
+    CheckAuth -- Ada --> Home["Halaman Utama /home<br/>Pilih Mode Presensi"]
 
-    Home --> ModeManual[Mode Manual<br/>Input Course ID & Session ID]
-    Home --> ModeAuto[Mode Auto Scan<br/>Swap Test]
+    Home --> ModeManual["Mode Manual<br/>Input Course ID & Session ID"]
+    Home --> ModeAuto["Mode Auto Scan<br/>Swap Test"]
 
-    ModeManual --> ScanManual[Halaman /scan<br/>Scan QR Standar]
-    ModeManual --> Status[Halaman /status<br/>Cek Status Presensi]
-    ModeAuto --> ScanAuto[Halaman /autoscan<br/>Scan QR Auto]
+    ModeManual --> ScanManual["Halaman /scan<br/>Scan QR Standar"]
+    ModeManual --> Status["Halaman /status<br/>Cek Status Presensi"]
+    ModeAuto --> ScanAuto["Halaman /autoscan<br/>Scan QR Auto"]
 
-    ScanManual --> ValidQR{Validasi Format<br/>QR TKN-XXXXXX}
-    ScanAuto --> ValidAuto{Validasi Format<br/>AUTOSCAN|...}
+    ScanManual --> ValidQR{"Validasi Format<br/>QR TKN-XXXXXX"}
+    ScanAuto --> ValidAuto{"Validasi Format<br/>AUTOSCAN|..."}
 
-    ValidQR -- Tidak Valid --> ToastErr1[Toast Error] -.-> ScanManual
-    ValidAuto -- Tidak Valid --> ToastErr2[Toast Error] -.-> ScanAuto
+    ValidQR -- Tidak Valid --> ToastErr1["Toast Error"] -.-> ScanManual
+    ValidAuto -- Tidak Valid --> ToastErr2["Toast Error"] -.-> ScanAuto
 
-    ValidQR -- Valid --> Result[Halaman /result<br/>Konfirmasi Lokasi & Kirim Telemetry]
+    ValidQR -- Valid --> Result["Halaman /result<br/>Konfirmasi Lokasi & Kirim Telemetry"]
     ValidAuto -- Valid --> Result
 
-    Result --> SendGPS[Kirim Data GPS<br/>Jika Tersedia]
-    SendGPS --> ApiCheckin[POST /presence/checkin]
+    Result --> SendGPS["Kirim Data GPS<br/>Jika Tersedia"]
+    SendGPS --> ApiCheckin["POST /presence/checkin"]
 
-    ApiCheckin --> ApiResult{Response API}
-    ApiResult -- Sukses --> SuksesUI[Tampilkan Berhasil & Status]
-    ApiResult -- Gagal --> GagalUI[Tampilkan Pesan Error]
+    ApiCheckin --> ApiResult{"Response API"}
+    ApiResult -- Sukses --> SuksesUI["Tampilkan Berhasil & Status"]
+    ApiResult -- Gagal --> GagalUI["Tampilkan Pesan Error"]
 
     SuksesUI --> Home
     GagalUI --> Home
