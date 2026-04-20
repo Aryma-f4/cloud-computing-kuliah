@@ -8,6 +8,7 @@ import { PageTransition } from "@/src/components/PageTransition";
 export default function ChoicePage() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [gasMode, setGasMode] = useState<"own" | "external">("own");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -43,12 +44,14 @@ export default function ChoicePage() {
               <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
                 E-Absen
               </span>
+
+              {/* Settings button */}
               <button
-                onClick={handleLogout}
+                onClick={() => router.push("/settings")}
                 className="flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/80 transition hover:bg-white/25 active:scale-95"
               >
-                <LogOut className="h-3 w-3" />
-                Logout
+                <Settings className="h-3 w-3" />
+                Pengaturan
               </button>
             </div>
             <p className="text-sm text-white/70 font-medium">Selamat datang,</p>

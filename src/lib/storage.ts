@@ -1,10 +1,12 @@
 const isBrowser = typeof window !== "undefined";
 
 export const keys = {
-  user_id: "user_id",
-  device_id: "device_id",
+  user_id:        "user_id",
+  device_id:      "device_id",
   last_course_id: "last_course_id",
-  last_session_id: "last_session_id",
+  last_session_id:"last_session_id",
+  swap_gas_url:   "swap_gas_url",   // URL GAS eksternal
+  swap_mode:      "swap_mode",      // "own" | "external"
 } as const;
 
 export function getItem(key: string) {
