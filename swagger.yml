@@ -1,0 +1,665 @@
+openapi: 3.0.3
+info:
+  title: E-Absen GAS API
+  version: 1.0.0
+  description: |
+    Referensi API untuk backend E-Absen.
+
+    Catatan implementasi:
+    - Backend asli berjalan di Google Apps Script.
+    - Routing aktual memakai query `?path=...` pada endpoint `/exec`.
+    - Path pada dokumen ini ditulis dalam bentuk logis agar lebih mudah dibaca di Swagger UI.
+
+    Contoh translasi:
+    - `POST /presence/checkin` direalisasikan sebagai `POST /exec?path=presence/checkin`
+    - `GET /presence/status` direalisasikan sebagai `GET /exec?path=presence/status`
+servers:
+  - url: https://script.google.com/macros/s/AKfycbyIhTyCOmVcCoq4ooTBqh1xpLwD4j5paaU1yzqjyPPEwa6X70Ho5J8Ykkf9ZoO1Of5H/exec
+    description: Deployment GAS aktif
+tags:
+  - name: Presence
+  - name: Telemetry
+paths:
+  /presence/qr/generate:
+    post:
+      tags: [Presence]
+      summary: Generate QR token standar
+      description: Membuat token QR presensi dengan masa berlaku singkat.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateQrRequest'
+            examples:
+              default:
+                value:
+                  course_id: cloud-101
+                  session_id: sesi-01
+                  ts: "2026-02-18T10:15:30Z"
+      responses:
+        '200':
+          description: Token berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateQrResponse'
+
+  /presence/qr/autoscan:
+    post:
+      tags: [Presence]
+      summary: Generate QR autoscan
+      description: Membuat token QR dengan payload `AUTOSCAN|TKN-xxx|course_id|session_id`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateQrRequest'
+      responses:
+        '200':
+          description: Token autoscan berhasil dibuat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateAutoscanQrResponse'
+
+  /presence/checkin:
+    post:
+      tags: [Presence]
+      summary: Check-in presensi
+      description: Memvalidasi token dan menyimpan presensi mahasiswa.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+            examples:
+              default:
+                value:
+                  user_id: "434231022"
+                  device_id: "dev-001"
+                  course_id: "cloud-101"
+                  session_id: "sesi-02"
+                  qr_token: "TKN-H2KU13"
+                  ts: "2026-02-18T10:15:30Z"
+                  loc_lat: -7.2575
+                  loc_lng: 112.7521
+                  loc_acc: 12.5
+      responses:
+        '200':
+          description: Hasil check-in
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CheckInSuccessResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /presence/status:
+    get:
+      tags: [Presence]
+      summary: Cek status presensi
+      description: Mengambil status presensi untuk kombinasi user, course, dan session tertentu.
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/course_id'
+        - $ref: '#/components/parameters/session_id'
+      responses:
+        '200':
+          description: Status presensi
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StatusResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                checked_in:
+                  value:
+                    ok: true
+                    data:
+                      user_id: "434231022"
+                      course_id: "cloud-101"
+                      session_id: "sesi-02"
+                      presence_id: "PR-AB123"
+                      status: "checked_in"
+                      last_ts: "2026-02-18T10:15:30Z"
+                      stats:
+                        total_presence: 4
+                        percentage: 29
+                        max_sessions: 14
+                not_checked_in:
+                  value:
+                    ok: true
+                    data:
+                      user_id: "434231022"
+                      course_id: "cloud-101"
+                      session_id: "sesi-03"
+                      presence_id: null
+                      status: "not_checked_in"
+                      last_ts: null
+                      stats:
+                        total_presence: 4
+                        percentage: 29
+                        max_sessions: 14
+
+  /presence/history:
+    get:
+      tags: [Presence]
+      summary: Ambil riwayat presensi
+      parameters:
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/course_id_optional'
+        - $ref: '#/components/parameters/session_id_optional'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Riwayat presensi
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PresenceHistoryResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /telemetry/accel:
+    post:
+      tags: [Telemetry]
+      summary: Kirim batch accelerometer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostAccelRequest'
+            examples:
+              default:
+                value:
+                  device_id: "dev-001"
+                  ts: "2026-02-18T10:15:30Z"
+                  samples:
+                    - t: "2026-02-18T10:15:29.100Z"
+                      x: 0.12
+                      y: 0.01
+                      z: 9.70
+                    - t: "2026-02-18T10:15:29.300Z"
+                      x: 0.15
+                      y: 0.02
+                      z: 9.68
+      responses:
+        '200':
+          description: Hasil penerimaan batch accelerometer
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PostAccelResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /telemetry/accel/latest:
+    get:
+      tags: [Telemetry]
+      summary: Ambil sample accelerometer terbaru
+      parameters:
+        - $ref: '#/components/parameters/device_id'
+      responses:
+        '200':
+          description: Sample accelerometer terbaru
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GetAccelLatestResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /telemetry/gps:
+    post:
+      tags: [Telemetry]
+      summary: Kirim GPS telemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostGpsRequest'
+            examples:
+              default:
+                value:
+                  device_id: "dev-001"
+                  user_id: "434231022"
+                  ts: "2026-02-18T10:15:30Z"
+                  lat: -7.2575
+                  lng: 112.7521
+                  accuracy_m: 12.5
+      responses:
+        '200':
+          description: Hasil penerimaan GPS telemetry
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PostGpsResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /telemetry/gps/latest:
+    get:
+      tags: [Telemetry]
+      summary: Ambil GPS terbaru untuk marker
+      parameters:
+        - $ref: '#/components/parameters/device_id'
+        - $ref: '#/components/parameters/user_id'
+      responses:
+        '200':
+          description: Posisi GPS terbaru
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GetGpsLatestResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+  /telemetry/gps/history:
+    get:
+      tags: [Telemetry]
+      summary: Ambil riwayat GPS
+      parameters:
+        - $ref: '#/components/parameters/device_id'
+        - $ref: '#/components/parameters/user_id'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Riwayat GPS berdasarkan device dan user
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GetGpsHistoryResponse'
+                  - $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    user_id:
+      name: user_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: "434231022"
+    course_id:
+      name: course_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: "cloud-101"
+    session_id:
+      name: session_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: "sesi-02"
+    course_id_optional:
+      name: course_id
+      in: query
+      required: false
+      schema:
+        type: string
+      example: "cloud-101"
+    session_id_optional:
+      name: session_id
+      in: query
+      required: false
+      schema:
+        type: string
+      example: "sesi-02"
+    device_id:
+      name: device_id
+      in: query
+      required: true
+      schema:
+        type: string
+      example: "dev-001"
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 100
+      example: 200
+
+  schemas:
+    GenerateQrRequest:
+      type: object
+      required: [course_id, session_id, ts]
+      properties:
+        course_id:
+          type: string
+        session_id:
+          type: string
+        ts:
+          type: string
+          format: date-time
+
+    GenerateQrResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            qr_token:
+              type: string
+              example: TKN-H2KU13
+            expires_at:
+              type: string
+              format: date-time
+
+    GenerateAutoscanQrResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            qr_token:
+              type: string
+              example: AUTOSCAN|TKN-H2KU13|cloud-101|sesi-02
+            raw_token:
+              type: string
+              example: TKN-H2KU13
+            expires_at:
+              type: string
+              format: date-time
+
+    CheckInRequest:
+      type: object
+      required: [user_id, device_id, course_id, session_id, qr_token, ts]
+      properties:
+        user_id:
+          type: string
+        device_id:
+          type: string
+        course_id:
+          type: string
+        session_id:
+          type: string
+        qr_token:
+          type: string
+        ts:
+          type: string
+          format: date-time
+        loc_lat:
+          type: number
+          nullable: true
+        loc_lng:
+          type: number
+          nullable: true
+        loc_acc:
+          type: number
+          nullable: true
+        accel_x:
+          type: number
+          nullable: true
+        accel_y:
+          type: number
+          nullable: true
+        accel_z:
+          type: number
+          nullable: true
+        accel_m:
+          type: number
+          nullable: true
+
+    CheckInSuccessResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            presence_id:
+              type: string
+              example: PR-AB123
+            status:
+              type: string
+              example: checked_in
+
+    StatusStats:
+      type: object
+      properties:
+        total_presence:
+          type: integer
+          example: 4
+        percentage:
+          type: integer
+          example: 29
+        max_sessions:
+          type: integer
+          example: 14
+
+    StatusResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user_id:
+              type: string
+            course_id:
+              type: string
+            session_id:
+              type: string
+            presence_id:
+              type: string
+              nullable: true
+            status:
+              type: string
+              example: checked_in
+            last_ts:
+              type: string
+              nullable: true
+            stats:
+              $ref: '#/components/schemas/StatusStats'
+
+    PresenceHistoryItem:
+      type: object
+      properties:
+        presence_id:
+          type: string
+        course_id:
+          type: string
+        session_id:
+          type: string
+        status:
+          type: string
+        ts:
+          type: string
+
+    PresenceHistoryResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user_id:
+              type: string
+            total:
+              type: integer
+            limit:
+              type: integer
+            records:
+              type: array
+              items:
+                $ref: '#/components/schemas/PresenceHistoryItem'
+
+    AccelSample:
+      type: object
+      required: [t, x, y, z]
+      properties:
+        t:
+          type: string
+          format: date-time
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+
+    PostAccelRequest:
+      type: object
+      required: [device_id, ts, samples]
+      properties:
+        device_id:
+          type: string
+        ts:
+          type: string
+          format: date-time
+        samples:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccelSample'
+
+    PostAccelResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accepted:
+              type: integer
+              example: 2
+
+    GetAccelLatestResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+          properties:
+            t:
+              type: string
+              format: date-time
+            x:
+              type: number
+            y:
+              type: number
+            z:
+              type: number
+
+    PostGpsRequest:
+      type: object
+      required: [device_id, user_id, ts, lat, lng]
+      properties:
+        device_id:
+          type: string
+        user_id:
+          type: string
+        ts:
+          type: string
+          format: date-time
+        lat:
+          type: number
+        lng:
+          type: number
+        accuracy_m:
+          type: number
+          nullable: true
+
+    PostGpsResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            accepted:
+              type: boolean
+              example: true
+
+    GetGpsLatestResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          nullable: true
+          properties:
+            ts:
+              type: string
+              format: date-time
+            lat:
+              type: number
+            lng:
+              type: number
+            accuracy_m:
+              type: number
+              nullable: true
+
+    GpsHistoryItem:
+      type: object
+      properties:
+        ts:
+          type: string
+          format: date-time
+        lat:
+          type: number
+        lng:
+          type: number
+        accuracy_m:
+          type: number
+          nullable: true
+
+    GetGpsHistoryResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            device_id:
+              type: string
+            user_id:
+              type: string
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/GpsHistoryItem'
+
+    ErrorResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "missing_field: user_id"

@@ -256,39 +256,35 @@ npm install react-hot-toast
 
 ## Alur Navigasi Lengkap (Web)
 
-```text
-Browser Buka Web App (/)
-    │
-    ├─ Cek localStorage: 'user_id' ada? 
-    │     ├── No ──(Redirect)──→ Halaman /login
-    │     │                           │
-    │     │                     Isi & Simpan
-    │     │                           │
-    │     └── Yes ──(Render)───→ Halaman Utama (/) ◄──────────────┐
-    │                                 │                           │
-    │                    ┌────────────┴────────────┐              │
-    │                    │ (Input Session)         │              │
-    │               [Tombol Scan]            [Tombol Status]      │
-    │                    │                         │              │
-    │               Halaman /scan            Halaman /status      │
-    │                    │                         │              │
-    │               QR format valid?           Fetch API          │
-    │                    │                         │              │
-    │       ──No──→ Toast "Token Invalid"          └──────────────┤
-    │                    │                                        │
-    │       ──Yes──→ Halaman /result?token=...                    │
-    │                    │                                        │
-    │               Fetch API (POST)                              │
-    │                    │                                        │
-    │               ┌────┴─────┐                                  │
-    │            ok:true     ok:false                             │
-    │               │          │                                  │
-    │          UI Sukses   UI Error/Gagal                         │
-    │               │          │                                  │
-    │               └────┬─────┘                                  │
-    │                    │                                        │
-    │             [Kembali ke Home] ──────────────────────────────┘
-
+```mermaid
+flowchart TD
+    Start((Browser Buka Web App /)) --> CheckAuth{Cek localStorage<br/>'user_id' ada?}
+    
+    CheckAuth -- No (Redirect) --> Login[Halaman /login<br/>Isi & Simpan]
+    Login --> Home
+    
+    CheckAuth -- Yes (Render) --> Home[Halaman Utama /]
+    
+    Home --> InputSession[Input Session]
+    InputSession --> BtnScan[Tombol Scan]
+    InputSession --> BtnStatus[Tombol Status]
+    
+    BtnScan --> ScanPage[Halaman /scan]
+    BtnStatus --> StatusPage[Halaman /status<br/>Fetch API]
+    
+    ScanPage --> ValidQR{QR format valid?}
+    ValidQR -- No --> ToastErr[Toast 'Token Invalid'] -.-> ScanPage
+    ValidQR -- Yes --> ResultPage[Halaman /result?token=...]
+    
+    ResultPage --> FetchAPI[Fetch API POST]
+    FetchAPI --> CheckOK{Response API}
+    
+    CheckOK -- ok: true --> UISuccess[UI Sukses]
+    CheckOK -- ok: false --> UIError[UI Error/Gagal]
+    
+    UISuccess --> Home
+    UIError --> Home
+    StatusPage --> Home
 ```
 
 ---
