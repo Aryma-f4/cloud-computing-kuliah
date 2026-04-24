@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getItem, removeItem, keys } from "@/src/lib/storage";
-import { BookOpen, QrCode, ChevronRight, LogOut, Zap } from "lucide-react";
+import { BookOpen, QrCode, ChevronRight, LogOut, Zap, Settings } from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
 export default function ChoicePage() {
@@ -21,22 +21,19 @@ export default function ChoicePage() {
     return () => cancelAnimationFrame(frameId);
   }, [router]);
 
-  function handleLogout() {
+  const handleLogout = () => {
     removeItem(keys.user_id);
     removeItem(keys.device_id);
-    removeItem(keys.last_course_id);
-    removeItem(keys.last_session_id);
     router.replace("/login");
-  }
+  };
 
-  if (!isLoaded || !userId) return null;
+  if (!userId) return null;
 
   return (
-    <PageTransition>
-      <div className="mx-auto flex min-h-dvh max-w-md flex-col bg-[#F2F2F7] dark:bg-neutral-950">
-
-        {/* ── HERO ── */}
-        <div className="relative bg-primary px-6 pt-14 pb-10 overflow-hidden rounded-b-3xl">
+    <PageTransition isLoaded={isLoaded}>
+      <div className="min-h-dvh flex flex-col">
+        {/* ── HEADER ── */}
+        <div className="relative overflow-hidden bg-gradient-to-b from-indigo-600 to-indigo-700 px-4 pt-14 pb-8 text-white">
           <div className="absolute -top-12 -right-12 h-48 w-48 rounded-full bg-white/10" />
           <div className="absolute top-8 -right-4 h-24 w-24 rounded-full bg-accent/20" />
           <div className="relative">
@@ -97,33 +94,27 @@ export default function ChoicePage() {
                 <QrCode className="h-6 w-6 text-white" />
               </div>
               <div className="text-left">
-                <div className="flex items-center gap-2">
-                  <p className="font-bold text-base text-white leading-tight">
-                    Scan QR Otomatis
-                  </p>
-                  <span className="flex items-center gap-1 rounded-full bg-yellow-400/20 px-2 py-0.5 text-[10px] font-bold text-yellow-300">
-                    <Zap className="h-2.5 w-2.5" />
-                    AUTO
-                  </span>
-                </div>
-                <p className="text-xs text-white/70 mt-0.5 max-w-[210px]">
-                  Course ID terisi otomatis dari QR kelompok lain
+                <p className="font-bold text-base text-white leading-tight">
+                  Auto Scan
+                </p>
+                <p className="text-xs text-white/80 mt-0.5 max-w-[210px]">
+                  Scan QR otomatis untuk presensi
                 </p>
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-white/50 shrink-0" />
+            <ChevronRight className="h-5 w-5 text-white/70 shrink-0" />
           </button>
+        </div>
 
-          {/* Info box */}
-          <div className="rounded-2xl bg-white dark:bg-neutral-900 px-4 py-4 ring-1 ring-black/5 dark:ring-white/5">
-            <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
-              Panduan Swap Test
-            </p>
-            <div className="space-y-1.5 text-[11px] text-neutral-400 dark:text-neutral-500">
-              <p>📋 <span className="font-medium text-neutral-600 dark:text-neutral-400">Mode Manual</span> — untuk presensi di kelas sendiri</p>
-              <p>⚡ <span className="font-medium text-neutral-600 dark:text-neutral-400">Scan QR Otomatis</span> — untuk scan QR dari sheet kelompok lain saat swap test</p>
-            </div>
-          </div>
+        {/* ── FOOTER ── */}
+        <div className="sticky bottom-0 px-4 pb-6 pt-2 bg-gradient-to-t from-white to-transparent">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl bg-white dark:bg-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-700 dark:text-neutral-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 transition-all hover:bg-neutral-50 dark:hover:bg-neutral-800 active:scale-[0.98]"
+          >
+            <LogOut className="h-4 w-4" />
+            Keluar
+          </button>
         </div>
       </div>
     </PageTransition>

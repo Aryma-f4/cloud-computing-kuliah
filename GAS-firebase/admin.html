@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Presensi QR - Firebase</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg:       #f5f7fa;
+    --white:    #ffffff;
+    --border:   #e4e8ef;
+    --border2:  #d0d7e3;
+    --text:     #1a202c;
+    --muted:    #6b7280;
+    --light:    #9ca3af;
+    --blue:     #2563eb;
+    --blue-lt:  #eff6ff;
+    --blue-mid: #bfdbfe;
+    --green:    #16a34a;
+    --green-lt: #f0fdf4;
+    --green-mid:#bbf7d0;
+    --red:      #dc2626;
+    --red-lt:   #fef2f2;
+    --yellow:   #d97706;
+    --yellow-lt:#fffbeb;
+    --radius:   10px;
+    --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+    --shadow-md:0 4px 12px rgba(0,0,0,.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .header-logo {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .header-logo span { color: var(--blue); }
+  .header-tag {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--blue-lt);
+    color: var(--blue);
+    border: 1px solid var(--blue-mid);
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .header-course {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .header-course strong { color: var(--text); }
+
+  /* ── LAYOUT ─────────────────────────────── */
+  main {
+    max-width: 1100px;
+    margin: 28px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+  }
+  .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── CARD ───────────────────────────────── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-head h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .card-head .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border2);
+  }
+  .card-head .dot.green  { background: var(--green); box-shadow: 0 0 0 3px var(--green-mid); }
+  .card-head .dot.yellow { background: var(--yellow); }
+  .card-body { padding: 18px; }
+
+  /* ── FORM ───────────────────────────────── */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--white);
+    border: 1px solid var(--border2);
+    border-radius: 7px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  }
+
+  /* ── BUTTON ─────────────────────────────── */
+  .btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 7px;
+    font-family: 'Figtree', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .btn-blue {
+    background: var(--blue);
+    color: white;
+  }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-blue:disabled { opacity: .55; cursor: not-allowed; }
+
+  .btn-outline {
+    background: white;
+    color: var(--text);
+    border: 1px solid var(--border2);
+    margin-top: 8px;
+  }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+
+  /* ── TOKEN RESULT ───────────────────────── */
+  .token-box {
+    margin-top: 14px;
+    background: var(--blue-lt);
+    border: 1px solid var(--blue-mid);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: none;
+  }
+  .token-box.show { display: block; }
+  .token-main {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--blue);
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  .token-exp {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ── COUNTDOWN ──────────────────────────── */
+  .countdown-wrap { margin-top: 12px; }
+  .countdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .countdown-row #cd-time { font-weight: 700; color: var(--text); }
+  .bar-track {
+    background: var(--border);
+    border-radius: 99px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--blue);
+    border-radius: 99px;
+    transition: width 1s linear, background .3s;
+    width: 100%;
+  }
+  .bar-fill.warn   { background: var(--yellow); }
+  .bar-fill.danger { background: var(--red); }
+
+  /* ── AUTO REFRESH ───────────────────────── */
+  .auto-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+  }
+  .switch { position: relative; width: 34px; height: 18px; cursor: pointer; flex-shrink: 0; }
+  .switch input { display: none; }
+  .sw-track {
+    width: 100%; height: 100%;
+    background: var(--border2);
+    border-radius: 99px;
+    transition: background .2s;
+  }
+  .sw-thumb {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 12px; height: 12px;
+    background: white;
+    border-radius: 50%;
+    transition: transform .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .sw-track { background: var(--green); }
+  .switch input:checked ~ .sw-thumb { transform: translateX(16px); }
+  .auto-row span { font-size: 13px; color: var(--muted); flex: 1; }
+  .badge-auto {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--yellow-lt);
+    color: var(--yellow);
+    border: 1px solid rgba(217,119,6,.20);
+    padding: 2px 6px;
+    border-radius: 12px;
+  }
+
+  /* ── PRESENCE LIST ──────────────────────── */
+  .presence-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .presence-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .presence-item:last-child { border-bottom: none; }
+  .presence-left { display: flex; align-items: center; gap: 10px; }
+  .presence-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--blue-lt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .presence-info { display: flex; flex-direction: column; }
+  .presence-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .presence-time {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .presence-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+  .presence-status.checked { background: var(--green-lt); color: var(--green); }
+  .presence-status.pending { background: var(--yellow-lt); color: var(--yellow); }
+
+  /* ── ACCELEROMETER TAB ──────────────────── */
+  .accel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .accel-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .accel-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .accel-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .accel-unit {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .accel-x { color: #ef4444; }
+  .accel-y { color: #22c55e; }
+  .accel-z { color: #3b82f6; }
+
+  /* ── CHART ──────────────────────────────── */
+  .chart-container {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  #accelChart {
+    width: 100%;
+    height: 200px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  /* ── DEVICE LIST ───────────────────────── */
+  .device-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .device-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .device-info { display: flex; flex-direction: column; }
+  .device-id {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .device-last {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .device-status {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 8px;
+  }
+  .device-status.active { background: var(--green-lt); color: var(--green); }
+  .device-status.inactive { background: var(--muted); color: white; }
+
+  /* ── TABS ─────────────────────────────── */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── RESPONSIVE ─────────────────────────── */
+  @media (max-width: 768px) {
+    main { grid-template-columns: 1fr; }
+    header { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">E-<span>Absen</span></div>
+    <div class="header-tag">Firebase</div>
+  </div>
+  <div class="header-course">
+    Course: <strong id="currentCourse">-</strong> | Session: <strong id="currentSession">-</strong>
+  </div>
+</header>
+
+<main>
+  <div class="left-col">
+    
+    <!-- QR Generator -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dot yellow"></div>
+        <h3>Generate QR Token</h3>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Course ID</label>
+          <input type="text" id="courseId" placeholder="cloud-101" value="cloud-101">
+        </div>
+        <div class="field">
+          <label>Session ID</label>
+          <input type="text" id="sessionId" placeholder="sesi-01" value="sesi-01">
+        </div>
+        <div class="field">
+          <label>Mode</label>
+          <select id="qrMode" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border2); border-radius: 7px;">
+            <option value="standard">Standard (TKN-XXXXXX)</option>
+            <option value="autoscan">Autoscan (AUTOSCAN|TKN-XXXXXX|course|session)</option>
+          </select>
+        </div>
+        <button class="btn btn-blue" onclick="generateQR()">Generate QR</button>
+        <button class="btn btn-outline" onclick="generateAutoscanQR()">Generate Autoscan QR</button>
+        
+        <div class="token-box" id="tokenBox">
+          <div class="token-main" id="tokenMain"></div>
+          <div class="token-exp">Expires: <span id="tokenExp"></span></div>
+          <div id="qrcode" style="margin-top: 12px;"></div>
+          <div class="countdown-wrap">
+            <div class="countdown-row">
+              <span>Valid for</span>
+              <span id="cd-time">2:00</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" id="barFill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Auto Refresh -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dot green"></div>
+        <h3>Auto Refresh</h3>
+      </div>
+      <div class="card-body">
+        <div class="auto-row">
+          <label class="switch">
+            <input type="checkbox" id="autoRefresh" checked>
+            <div class="sw-track"></div>
+            <div class="sw-thumb"></div>
+          </label>
+          <span>Refresh otomatis setiap 5 detik</span>
+          <div class="badge-auto">AUTO</div>
+        </div>
+        <button class="btn btn-outline" onclick="refreshData()">Refresh Sekarang</button>
+      </div>
+    </div>
+
+    <!-- Accelerometer Data -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dot yellow"></div>
+        <h3>Accelerometer Telemetry</h3>
+      </div>
+      <div class="card-body">
+        <div class="accel-grid">
+          <div class="accel-card">
+            <div class="accel-label accel-x">X Axis</div>
+            <div class="accel-value" id="accelX">0.00</div>
+            <div class="accel-unit">m/s²</div>
+          </div>
+          <div class="accel-card">
+            <div class="accel-label accel-y">Y Axis</div>
+            <div class="accel-value" id="accelY">0.00</div>
+            <div class="accel-unit">m/s²</div>
+          </div>
+          <div class="accel-card">
+            <div class="accel-label accel-z">Z Axis</div>
+            <div class="accel-value" id="accelZ">9.80</div>
+            <div class="accel-unit">m/s²</div>
+          </div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Accelerometer Chart</div>
+          <canvas id="accelChart"></canvas>
+        </div>
+        <div class="device-list" id="deviceList">
+          <div class="device-item">
+            <div class="device-info">
+              <div class="device-id">No devices connected</div>
+              <div class="device-last">Waiting for data...</div>
+            </div>
+            <div class="device-status inactive">OFFLINE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('presence')">Presence</div>
+      <div class="tab" onclick="switchTab('telemetry')">Telemetry</div>
+      <div class="tab" onclick="switchTab('settings')">Settings</div>
+    </div>
+
+    <!-- Presence Tab -->
+    <div class="tab-content active" id="presenceTab">
+      <div class="card">
+        <div class="card-head">
+          <div class="dot green"></div>
+          <h3>Presence List</h3>
+          <span style="margin-left: auto; font-size: 11px; color: var(--muted);">
+            <span id="presenceCount">0</span> students
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="presence-list" id="presenceList">
+            <div style="text-align: center; padding: 40px; color: var(--muted);">
+              No presence data yet
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Tab -->
+    <div class="tab-content" id="telemetryTab">
+      <div class="card">
+        <div class="card-head">
+          <div class="dot yellow"></div>
+          <h3>Telemetry Overview</h3>
+        </div>
+        <div class="card-body">
+          <div style="text-align: center; padding: 40px; color: var(--muted);">
+            Telemetry data will appear here
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-content" id="settingsTab">
+      <div class="card">
+        <div class="card-head">
+          <div class="dot blue"></div>
+          <h3>Firebase Settings</h3>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>Firebase Project ID</label>
+            <input type="text" id="firebaseProjectId" placeholder="e-absen-firebase" value="e-absen-firebase">
+          </div>
+          <div class="field">
+            <label>Service Account JSON</label>
+            <textarea id="serviceAccountJson" rows="6" placeholder="Paste your service account JSON here..." style="width: 100%; padding: 8px 12px; border: 1px solid var(--border2); border-radius: 7px; font-family: 'Figtree', sans-serif; font-size: 12px;"></textarea>
+          </div>
+          <button class="btn btn-blue" onclick="saveFirebaseSettings()">Save Settings</button>
+          <button class="btn btn-outline" onclick="testFirebaseConnection()">Test Connection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Global variables
+let currentToken = null;
+let countdownInterval = null;
+let autoRefreshInterval = null;
+let accelChart = null;
+let telemetryData = [];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  loadFirebaseSettings();
+  startAutoRefresh();
+  initAccelerometerChart();
+  
+  // Set current course and session
+  document.getElementById('currentCourse').textContent = document.getElementById('courseId').value;
+  document.getElementById('currentSession').textContent = document.getElementById('sessionId').value;
+  
+  // Update on input change
+  document.getElementById('courseId').addEventListener('input', function() {
+    document.getElementById('currentCourse').textContent = this.value;
+  });
+  document.getElementById('sessionId').addEventListener('input', function() {
+    document.getElementById('currentSession').textContent = this.value;
+  });
+});
+
+// Firebase settings
+function loadFirebaseSettings() {
+  const settings = localStorage.getItem('firebaseSettings');
+  if (settings) {
+    const parsed = JSON.parse(settings);
+    document.getElementById('firebaseProjectId').value = parsed.projectId || 'e-absen-firebase';
+    document.getElementById('serviceAccountJson').value = parsed.serviceAccountJson || '';
+  }
+}
+
+function saveFirebaseSettings() {
+  const projectId = document.getElementById('firebaseProjectId').value;
+  const serviceAccountJson = document.getElementById('serviceAccountJson').value;
+  
+  if (!serviceAccountJson) {
+    alert('Please paste your service account JSON');
+    return;
+  }
+  
+  try {
+    JSON.parse(serviceAccountJson); // Validate JSON
+    
+    const settings = {
+      projectId: projectId,
+      serviceAccountJson: serviceAccountJson
+    };
+    
+    localStorage.setItem('firebaseSettings', JSON.stringify(settings));
+    alert('Firebase settings saved successfully!');
+    
+    // Save to Google Apps Script Properties
+    google.script.run
+      .withSuccessHandler(function(response) {
+        console.log('Settings saved to GAS:', response);
+      })
+      .withFailureHandler(function(error) {
+        console.error('Error saving to GAS:', error);
+      })
+      .saveFirebaseSettings(projectId, serviceAccountJson);
+      
+  } catch (error) {
+    alert('Invalid JSON format: ' + error.message);
+  }
+}
+
+function testFirebaseConnection() {
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.ok) {
+        alert('Firebase connection successful!');
+      } else {
+        alert('Firebase connection failed: ' + (response.error || 'Unknown error'));
+      }
+    })
+    .withFailureHandler(function(error) {
+      alert('Error testing connection: ' + error.message);
+    })
+    .testFirebaseConnection();
+}
+
+// QR Generation
+function generateQR() {
+  const courseId = document.getElementById('courseId').value;
+  const sessionId = document.getElementById('sessionId').value;
+  const mode = document.getElementById('qrMode').value;
+  
+  if (!courseId || !sessionId) {
+    alert('Please enter Course ID and Session ID');
+    return;
+  }
+  
+  const payload = {
+    course_id: courseId,
+    session_id: sessionId,
+    ts: new Date().toISOString()
+  };
+  
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.ok) {
+        displayQR(response.data.qr_token, response.data.expires_at);
+      } else {
+        alert('Error: ' + (response.error || 'Unknown error'));
+      }
+    })
+    .withFailureHandler(function(error) {
+      alert('Error: ' + error.message);
+    })
+    .generateQR(payload);
+}
+
+function generateAutoscanQR() {
+  const courseId = document.getElementById('courseId').value;
+  const sessionId = document.getElementById('sessionId').value;
+  
+  if (!courseId || !sessionId) {
+    alert('Please enter Course ID and Session ID');
+    return;
+  }
+  
+  const payload = {
+    course_id: courseId,
+    session_id: sessionId,
+    ts: new Date().toISOString()
+  };
+  
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.ok) {
+        displayQR(response.data.qr_token, response.data.expires_at);
+      } else {
+        alert('Error: ' + (response.error || 'Unknown error'));
+      }
+    })
+    .withFailureHandler(function(error) {
+      alert('Error: ' + error.message);
+    })
+    .generateAutoscanQR(payload);
+}
+
+function displayQR(token, expiresAt) {
+  currentToken = token;
+  
+  // Display token
+  document.getElementById('tokenMain').textContent = token;
+  document.getElementById('tokenExp').textContent = new Date(expiresAt).toLocaleString();
+  
+  // Show token box
+  document.getElementById('tokenBox').classList.add('show');
+  
+  // Generate QR code
+  const qrcodeDiv = document.getElementById('qrcode');
+  qrcodeDiv.innerHTML = '';
+  new QRCode(qrcodeDiv, {
+    text: token,
+    width: 180,
+    height: 180,
+    colorDark: '#1a202c',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  
+  // Start countdown
+  startCountdown(expiresAt);
+}
+
+function startCountdown(expiresAt) {
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  const expiresTime = new Date(expiresAt).getTime();
+  const startTime = Date.now();
+  const duration = 120000; // 2 minutes
+  
+  countdownInterval = setInterval(function() {
+    const now = Date.now();
+    const elapsed = now - startTime;
+    const remaining = Math.max(0, duration - elapsed);
+    
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById('tokenBox').classList.remove('show');
+      currentToken = null;
+      return;
+    }
+    
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    
+    document.getElementById('cd-time').textContent = 
+      `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    const percentage = (remaining / duration) * 100;
+    const barFill = document.getElementById('barFill');
+    barFill.style.width = percentage + '%';
+    
+    if (percentage < 30) {
+      barFill.classList.add('danger');
+    } else if (percentage < 60) {
+      barFill.classList.add('warn');
+    } else {
+      barFill.classList.remove('warn', 'danger');
+    }
+  }, 1000);
+}
+
+// Data Refresh
+function refreshData() {
+  const courseId = document.getElementById('courseId').value;
+  const sessionId = document.getElementById('sessionId').value;
+  
+  if (!courseId || !sessionId) {
+    return;
+  }
+  
+  // Get presence data
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.ok) {
+        updatePresenceList(response.data.results);
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error getting presence data:', error);
+    })
+    .getAllPresence(courseId, sessionId);
+  
+  // Get telemetry data
+  google.script.run
+    .withSuccessHandler(function(response) {
+      if (response.ok) {
+        updateTelemetryData(response.data);
+      }
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error getting telemetry data:', error);
+    })
+    .getAllTelemetryData();
+}
+
+function updatePresenceList(presenceData) {
+  const presenceList = document.getElementById('presenceList');
+  const presenceCount = document.getElementById('presenceCount');
+  
+  if (!presenceData || presenceData.length === 0) {
+    presenceList.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--muted);">No presence data yet</div>';
+    presenceCount.textContent = '0';
+    return;
+  }
+  
+  presenceCount.textContent = presenceData.length;
+  
+  let html = '';
+  presenceData.forEach(function(item) {
+    const time = new Date(item.ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const initials = item.user_id.charAt(0).toUpperCase();
+    
+    html += `
+      <div class="presence-item">
+        <div class="presence-left">
+          <div class="presence-avatar">${initials}</div>
+          <div class="presence-info">
+            <div class="presence-name">${item.user_id}</div>
+            <div class="presence-time">${time}</div>
+          </div>
+        </div>
+        <div class="presence-status checked">HADIR</div>
+      </div>
+    `;
+  });
+  
+  presenceList.innerHTML = html;
+}
+
+function updateTelemetryData(data) {
+  // Update accelerometer values
+  if (data.accel && data.accel.length > 0) {
+    const latest = data.accel[data.accel.length - 1];
+    document.getElementById('accelX').textContent = latest.x.toFixed(2);
+    document.getElementById('accelY').textContent = latest.y.toFixed(2);
+    document.getElementById('accelZ').textContent = latest.z.toFixed(2);
+  }
+  
+  // Update device list
+  if (data.devices && data.devices.length > 0) {
+    updateDeviceList(data.devices);
+  }
+  
+  // Update chart
+  if (data.accel && data.accel.length > 0) {
+    updateAccelerometerChart(data.accel);
+  }
+}
+
+function updateDeviceList(devices) {
+  const deviceList = document.getElementById('deviceList');
+  
+  if (devices.length === 0) {
+    deviceList.innerHTML = `
+      <div class="device-item">
+        <div class="device-info">
+          <div class="device-id">No devices connected</div>
+          <div class="device-last">Waiting for data...</div>
+        </div>
+        <div class="device-status inactive">OFFLINE</div>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  devices.forEach(function(device) {
+    const status = device.isActive ? 'active' : 'inactive';
+    const statusText = device.isActive ? 'ONLINE' : 'OFFLINE';
+    const lastSeen = device.lastSeen ? new Date(device.lastSeen).toLocaleTimeString('id-ID') : 'Never';
+    
+    html += `
+      <div class="device-item">
+        <div class="device-info">
+          <div class="device-id">${device.device_id}</div>
+          <div class="device-last">Last seen: ${lastSeen}</div>
+        </div>
+        <div class="device-status ${status}">${statusText}</div>
+      </div>
+    `;
+  });
+  
+  deviceList.innerHTML = html;
+}
+
+// Accelerometer Chart
+function initAccelerometerChart() {
+  const canvas = document.getElementById('accelChart');
+  const ctx = canvas.getContext('2d');
+  
+  // Set canvas size
+  function resizeCanvas() {
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Chart data
+  const chartData = {
+    x: [],
+    y: [],
+    z: [],
+    timestamps: []
+  };
+  
+  const maxPoints = 60;
+  
+  function drawChart() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    if (chartData.x.length === 0) return;
+    
+    const width = canvas.width;
+    const height = canvas.height;
+    const padding = 20;
+    const chartWidth = width - padding * 2;
+    const chartHeight = height - padding * 2;
+    
+    // Find min/max values
+    let minVal = Math.min(...chartData.x, ...chartData.y, ...chartData.z);
+    let maxVal = Math.max(...chartData.x, ...chartData.y, ...chartData.z);
+    const range = maxVal - minVal || 1;
+    
+    // Draw grid
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 4; i++) {
+      const y = padding + (chartHeight / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding, y);
+      ctx.lineTo(width - padding, y);
+      ctx.stroke();
+    }
+    
+    // Draw data lines
+    const colors = {
+      x: '#ef4444',
+      y: '#22c55e',
+      z: '#3b82f6'
+    };
+    
+    ['x', 'y', 'z'].forEach(axis => {
+      ctx.strokeStyle = colors[axis];
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      chartData[axis].forEach((value, index) => {
+        const x = padding + (chartWidth / (chartData[axis].length - 1)) * index;
+        const y = padding + chartHeight - ((value - minVal) / range) * chartHeight;
+        
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      
+      ctx.stroke();
+    });
+    
+    // Draw labels
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '10px Figtree';
+    ctx.fillText(maxVal.toFixed(1), padding + 5, padding + 10);
+    ctx.fillText(minVal.toFixed(1), padding + 5, height - padding - 5);
+    
+    // Draw legend
+    const legends = [
+      { label: 'X', color: '#ef4444' },
+      { label: 'Y', color: '#22c55e' },
+      { label: 'Z', color: '#3b82f6' }
+    ];
+    
+    let legendX = width - 80;
+    legends.forEach(legend => {
+      ctx.fillStyle = legend.color;
+      ctx.fillRect(legendX, 10, 10, 10);
+      
+      ctx.fillStyle = '#6b7280';
+      ctx.fillText(legend.label, legendX + 13, 19);
+      legendX += 26;
+    });
+  }
+  
+  // Store chart reference
+  accelChart = {
+    update: function(data) {
+      if (data && data.length > 0) {
+        chartData.x = data.map(d => d.x);
+        chartData.y = data.map(d => d.y);
+        chartData.z = data.map(d => d.z);
+        chartData.timestamps = data.map(d => d.t);
+        
+        // Limit to max points
+        if (chartData.x.length > maxPoints) {
+          chartData.x = chartData.x.slice(-maxPoints);
+          chartData.y = chartData.y.slice(-maxPoints);
+          chartData.z = chartData.z.slice(-maxPoints);
+          chartData.timestamps = chartData.timestamps.slice(-maxPoints);
+        }
+        
+        drawChart();
+      }
+    }
+  };
+});
+
+function updateAccelerometerChart(accelData) {
+  if (accelChart && accelData && accelData.length > 0) {
+    accelChart.update(accelData);
+  }
+}
+
+// Tab switching
+function switchTab(tabName) {
+  // Hide all tabs
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  
+  // Show selected tab
+  event.target.classList.add('active');
+  document.getElementById(tabName + 'Tab').classList.add('active');
+}
+
+// Auto refresh
+function startAutoRefresh() {
+  const checkbox = document.getElementById('autoRefresh');
+  
+  if (checkbox.checked) {
+    autoRefreshInterval = setInterval(function() {
+      refreshData();
+    }, 5000);
+  }
+  
+  checkbox.addEventListener('change', function() {
+    if (this.checked) {
+      startAutoRefresh();
+    } else {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+    }
+  });
+}
+
+// Save settings to GAS
+function saveFirebaseSettings(projectId, serviceAccountJson) {
+  google.script.run
+    .withSuccessHandler(function(response) {
+      console.log('Firebase settings saved:', response);
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error saving Firebase settings:', error);
+    })
+    .saveFirebaseSettings(projectId, serviceAccountJson);
+}
+
+// Test Firebase connection
+function testFirebaseConnection() {
+  google.script.run
+    .withSuccessHandler(function(response) {
+      console.log('Firebase connection test:', response);
+    })
+    .withFailureHandler(function(error) {
+      console.error('Error testing Firebase connection:', error);
+    })
+    .testFirebaseConnection();
+}
+
+</script>
+
+</body>
+</html>

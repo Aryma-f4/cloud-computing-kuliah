@@ -8,7 +8,16 @@ const variants = {
   exit:    { opacity: 0, y: -8 },
 };
 
-export function PageTransition({ children }: { children: React.ReactNode }) {
+interface PageTransitionProps {
+  children: React.ReactNode;
+  isLoaded?: boolean;
+}
+
+export function PageTransition({ children, isLoaded = true }: PageTransitionProps) {
+  if (!isLoaded) {
+    return null; // Don't render until loaded
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div

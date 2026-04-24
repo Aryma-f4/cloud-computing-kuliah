@@ -16,7 +16,17 @@ import type {
   GetGpsHistoryResponse,
 } from "@/src/types/telemetry";
 
-const HARDCODED_GAS_URL = "https://script.google.com/macros/s/AKfycbyIhTyCOmVcCoq4ooTBqh1xpLwD4j5paaU1yzqjyPPEwa6X70Ho5J8Ykkf9ZoO1Of5H/exec";
+// Backend mode configuration
+const BACKEND_MODE = process.env.NEXT_PUBLIC_BACKEND_MODE || 'spreadsheet';
+const FIREBASE_GAS_URL = process.env.NEXT_PUBLIC_FIREBASE_GAS_URL;
+const SPREADSHEET_GAS_URL = process.env.NEXT_PUBLIC_SPREADSHEET_GAS_URL;
+
+// Determine which GAS URL to use based on backend mode
+const DEFAULT_GAS_URL = BACKEND_MODE === 'firebase' 
+  ? (FIREBASE_GAS_URL || "https://script.google.com/macros/s/YOUR_FIREBASE_GAS_DEPLOYMENT_ID/exec")
+  : (SPREADSHEET_GAS_URL || "https://script.google.com/macros/s/AKfycbyIhTyCOmVcCoq4ooTBqh1xpLwD4j5paaU1yzqjyPPEwa6X70Ho5J8Ykkf9ZoO1Of5H/exec");
+
+const HARDCODED_GAS_URL = DEFAULT_GAS_URL;
 const BASE_URL = ENV_BASE_URL || HARDCODED_GAS_URL;
 
 async function requestJson(url: string, init?: RequestInit) {
@@ -110,3 +120,35 @@ export async function getGpsHistory(device_id: string, user_id: string, limit = 
     method: "GET",
   });
 }
+
+// Backend mode utilities
+export const BackendUtils = {
+  getCurrentMode: () => BACKEND_MODE,
+  
+  isFirebaseMode: () => BACKEND_MODE === 'firebase',
+  
+  isSpreadsheetMode: () => BACKEND_MODE === 'spreadsheet',
+  
+  getFirebaseUrl: () => FIREBASE_GAS_URL,
+  
+  getSpreadsheetUrl: () => SPREADSHEET_GAS_URL,
+  
+  getActiveUrl: () => BASE_URL,
+  
+  // Switch backend mode (for dynamic switching if needed)
+  switchMode: (mode: 'firebase' | 'spreadsheet') => {
+    if (typeof window !== 'undefined') {
+      // Store mode in localStorage for persistence
+      localStorage.setItem('backend_mode', mode);
+    }
+    return mode;
+  },
+  
+  // Get mode from localStorage (if stored)
+  getStoredMode: () => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('backend_mode') as 'firebase' | 'spreadsheet' | null;
+    }
+    return null;
+  }
+};

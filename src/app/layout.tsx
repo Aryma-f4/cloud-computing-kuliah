@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
+import ClientLayout from "@/src/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "E-Kuliah",
@@ -20,8 +20,7 @@ export default function RootLayout({
   return (
     <html lang="id">
       <body className="min-h-dvh bg-background text-foreground antialiased">
-        <Toaster position="top-center" />
-        {children}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
