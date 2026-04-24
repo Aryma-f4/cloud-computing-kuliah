@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getItem, removeItem, keys } from "@/src/lib/storage";
-import { BookOpen, QrCode, ChevronRight, LogOut, Zap } from "lucide-react";
+import { BookOpen, QrCode, ChevronRight, LogOut, Zap, Settings } from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
 export default function ChoicePage() {
@@ -79,7 +80,7 @@ export default function ChoicePage() {
                 <p className="font-bold text-base text-neutral-900 dark:text-neutral-100 leading-tight">
                   Course ID Manual
                 </p>
-                <p className="text-xs text-neutral-400 mt-0.5 max-w-[210px]">
+                <p className="text-xs text-neutral-400 mt-0.5 max-w-52.5">
                   Atur Course ID dan Session ID secara manual
                 </p>
               </div>
@@ -106,7 +107,7 @@ export default function ChoicePage() {
                     AUTO
                   </span>
                 </div>
-                <p className="text-xs text-white/70 mt-0.5 max-w-[210px]">
+                <p className="text-xs text-white/70 mt-0.5 max-w-52.5">
                   Course ID terisi otomatis dari QR kelompok lain
                 </p>
               </div>

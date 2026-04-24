@@ -3,11 +3,12 @@ import React, { useEffect, useState, useCallback, ChangeEvent, Suspense } from "
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/src/components/ui/Button";
 import { Input } from "@/src/components/ui/Input";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Card } from "@/src/components/ui/Card";
 import { getItem, setItem, keys } from "@/src/lib/storage";
 import { getStatus, getPresenceHistory } from "@/src/lib/api";
 import type { StatusResponse, PresenceHistoryResponse } from "@/src/types/presence";
-import { BadgeCheck, BookOpen, CalendarDays, User, Hash, AlertCircle, RefreshCw, QrCode, ArrowLeft, Clock, ExternalLink, History, TrendingUp, CheckCircle2 } from "lucide-react";
+import { BadgeCheck, BookOpen, AlertCircle, RefreshCw, QrCode, ArrowLeft, ExternalLink, History, TrendingUp, CheckCircle2 } from "lucide-react";
 import { PageTransition } from "@/src/components/PageTransition";
 
 function StatusContent() {
@@ -316,7 +317,7 @@ function StatusContent() {
             </details>
           </div>
 
-          <div className="flex-1 min-h-[40px]" />
+          <div className="flex-1 min-h-10" />
 
           <Button
             variant="outline"
